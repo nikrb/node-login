@@ -13,6 +13,10 @@ var errorHandler = require('errorhandler');
 var cookieParser = require('cookie-parser');
 var MongoStore = require('connect-mongo')(session);
 
+function uniqid(a){
+	return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,uniqid);
+}
+
 var app = express();
 
 app.set('port', process.env.PORT || 3000);
@@ -20,7 +24,8 @@ app.set('views', __dirname + '/app/server/views');
 app.set('view engine', 'jade');
 app.use(cookieParser());
 app.use(session({
-	secret: 'faeb4453e5d14fe6f6d04637f78077c76c73d1b4',
+	// secret: 'faeb4453e5d14fe6f6d04637f78077c76c73d1b4',
+	secret: uniqid(),
 	proxy: true,
 	resave: true,
 	saveUninitialized: true,
