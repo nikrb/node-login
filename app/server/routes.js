@@ -119,7 +119,7 @@ module.exports = function(app) {
 					if (!e){
 						res.status(200).send('ok');
 					}	else{
-						for (k in e) console.log('ERROR : ', k, e[k]);
+						for ( var k in e) console.log('ERROR : ', k, e[k]);
 						res.status(400).send('unable to dispatch password reset');
 					}
 				});
