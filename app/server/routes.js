@@ -16,10 +16,11 @@ module.exports = function(app) {
 			AM.autoLogin(req.cookies.user, req.cookies.pass, function(o){
 				if (o != null){
 				    req.session.user = o;
-					res.redirect('/home');
-					res.send( {login:true, user:o})
+					// res.redirect('/home');
+					res.send( [{login:true}])
+					console.log( "auto login success for [%s]", o.user);
 				}	else{
-					res.render('login', { title: 'Hello - Please Login To Your Account' });
+					// res.render('login', { title: 'Hello - Please Login To Your Account' });
 					res.send( [{login:false}]);
 				}
 			});
@@ -27,10 +28,9 @@ module.exports = function(app) {
 	});
 	
 	app.post('/', function(req, res){
-		console.log( "post / request user :", req.body['user']);
 		AM.manualLogin(req.body['user'], req.body['pass'], function(e, o){
-			console.log( "login request:", o);
 			if (!o){
+				console.log( "login failed for [%s]", o.user);
 				res.status(400).send(e);
 			}	else{
 				req.session.user = o;
@@ -38,6 +38,7 @@ module.exports = function(app) {
 					res.cookie('user', o.user, { maxAge: 900000 });
 					res.cookie('pass', o.pass, { maxAge: 900000 });
 				}
+				console.log( "login post request success for [%s]", o.user);
 				res.status(200).send( [{login:true}]);
 			}
 		});
@@ -85,9 +86,10 @@ module.exports = function(app) {
 	});
 
 	app.post('/logout', function(req, res){
+		console.log( "post /logout:", req.cookies.user);
 		res.clearCookie('user');
 		res.clearCookie('pass');
-		req.session.destroy(function(e){ res.status(200).send('ok'); });
+		req.session.destroy(function(e){ res.status(200).send( [{logout:true}]); });
 	})
 	
 // creating new accounts //
@@ -95,19 +97,21 @@ module.exports = function(app) {
 	app.get('/signup', function(req, res) {
 		res.render('signup', {  title: 'Signup', countries : CT });
 	});
-	
-	app.post('/signup', function(req, res){
+
+	app.put('/signup', function(req, res){
 		AM.addNewAccount({
 			name 	: req.body['name'],
 			email 	: req.body['email'],
 			user 	: req.body['user'],
-			pass	: req.body['pass'],
-			country : req.body['country']
+			pass	: req.body['pass']
+			// country : req.body['country']
 		}, function(e){
 			if (e){
-				res.status(400).send(e);
+				console.log( "signup failed for email:", req.body['email']);
+				res.status(400).send( e);
 			}	else{
-				res.status(200).send('ok');
+				console.log( "signup success for email:", req.body['email']);
+				res.status(200).send( [{signup:true}]);
 			}
 		});
 	});
@@ -189,6 +193,9 @@ module.exports = function(app) {
 		});
 	});
 	
-	app.get('*', function(req, res) { res.render('404', { title: 'Page Not Found'}); });
+	app.get('*', function(req, res) {
+		// res.render('404', { title: 'Page Not Found'}); 
+		res.status(404).send( [{message:"Page Not Found"}]);
+	});
 
 };
