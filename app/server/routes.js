@@ -9,22 +9,27 @@ module.exports = function(app) {
 	app.get('/', function(req, res){
 	// check if the user's credentials are saved in a cookie //
 		if (req.cookies.user == undefined || req.cookies.pass == undefined){
-			res.render('login', { title: 'Hello - Please Login To Your Account' });
+			// res.render('login', { title: 'Hello - Please Login To Your Account' });
+			res.send( [{login:false}]);
 		}	else{
 	// attempt automatic login //
 			AM.autoLogin(req.cookies.user, req.cookies.pass, function(o){
 				if (o != null){
 				    req.session.user = o;
 					res.redirect('/home');
+					res.send( {login:true, user:o})
 				}	else{
 					res.render('login', { title: 'Hello - Please Login To Your Account' });
+					res.send( [{login:false}]);
 				}
 			});
 		}
 	});
 	
 	app.post('/', function(req, res){
+		console.log( "post / request user :", req.body['user']);
 		AM.manualLogin(req.body['user'], req.body['pass'], function(e, o){
+			console.log( "login request:", o);
 			if (!o){
 				res.status(400).send(e);
 			}	else{
@@ -33,7 +38,7 @@ module.exports = function(app) {
 					res.cookie('user', o.user, { maxAge: 900000 });
 					res.cookie('pass', o.pass, { maxAge: 900000 });
 				}
-				res.status(200).send(o);
+				res.status(200).send( [{login:true}]);
 			}
 		});
 	});
