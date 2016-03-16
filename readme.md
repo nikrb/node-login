@@ -1,5 +1,7 @@
 #[Node-Login](http://node-login.braitsch.io)
 
+###Convert end points to accept and spit out json - branch convert-json-response
+
 ###A basic account management system built in Node.js with the following features:
 
 * New User Account Creation
