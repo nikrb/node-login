@@ -17,7 +17,7 @@ module.exports = function(app) {
 				if (o != null){
 				    req.session.user = o;
 					// res.redirect('/home');
-					res.send( [{login:true}])
+					res.send( [{login:true}]);
 					console.log( "auto login success for [%s]", o.user);
 				}	else{
 					// res.render('login', { title: 'Hello - Please Login To Your Account' });
@@ -44,60 +44,16 @@ module.exports = function(app) {
 		});
 	});
 	
-// logged-in user homepage //
-	
-	app.get('/home', function(req, res) {
-		if (req.session.user == null){
-	// if user is not logged-in redirect back to login page //
-			res.redirect('/');
-		}	else{
-			res.render('home', {
-				title : 'Control Panel',
-				countries : CT,
-				udata : req.session.user
-			});
-		}
-	});
-	
-	app.post('/home', function(req, res){
-		if (req.session.user == null){
-			res.redirect('/');
-		}	else{
-			AM.updateAccount({
-				id		: req.session.user._id,
-				name	: req.body['name'],
-				email	: req.body['email'],
-				pass	: req.body['pass'],
-				country	: req.body['country']
-			}, function(e, o){
-				if (e){
-					res.status(400).send('error-updating-account');
-				}	else{
-					req.session.user = o;
-			// update the user's login cookies if they exists //
-					if (req.cookies.user != undefined && req.cookies.pass != undefined){
-						res.cookie('user', o.user, { maxAge: 900000 });
-						res.cookie('pass', o.pass, { maxAge: 900000 });	
-					}
-					res.status(200).send('ok');
-				}
-			});
-		}
-	});
 
 	app.post('/logout', function(req, res){
 		console.log( "post /logout:", req.cookies.user);
 		res.clearCookie('user');
 		res.clearCookie('pass');
 		req.session.destroy(function(e){ res.status(200).send( [{logout:true}]); });
-	})
+	});
 	
 // creating new accounts //
 	
-	app.get('/signup', function(req, res) {
-		res.render('signup', {  title: 'Signup', countries : CT });
-	});
-
 	app.put('/signup', function(req, res){
 		AM.addNewAccount({
 			name 	: req.body['name'],
@@ -138,6 +94,7 @@ module.exports = function(app) {
 		});
 	});
 
+	// reset password
 	app.get('/reset-password', function(req, res) {
 		var email = req.query["e"];
 		var passH = req.query["p"];
@@ -149,7 +106,7 @@ module.exports = function(app) {
 				req.session.reset = { email:email, passHash:passH };
 				res.render('reset', { title : 'Reset Password' });
 			}
-		})
+		});
 	});
 	
 	app.post('/reset-password', function(req, res) {
@@ -164,7 +121,7 @@ module.exports = function(app) {
 			}	else{
 				res.status(400).send('unable to update password');
 			}
-		})
+		});
 	});
 	
 // view & delete accounts //
@@ -172,7 +129,7 @@ module.exports = function(app) {
 	app.get('/print', function(req, res) {
 		AM.getAllRecords( function(e, accounts){
 			res.render('print', { title : 'Account List', accts : accounts });
-		})
+		});
 	});
 	
 	app.post('/delete', function(req, res){
