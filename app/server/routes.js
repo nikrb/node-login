@@ -2,8 +2,13 @@
 var CT = require('./modules/country-list');
 var AM = require('./modules/account-manager');
 var EM = require('./modules/email-dispatcher');
+var game = require('./modules/game.js');
 
 module.exports = function(app) {
+	
+	app.post( '/games', function( req, res){
+		game.saveAll( req, res);
+	});
 
 // main login page //
 	app.get('/', function(req, res){
