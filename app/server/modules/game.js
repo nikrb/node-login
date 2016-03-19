@@ -12,9 +12,10 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.findAll = function( req, res){
-    games.find().sort( { date : 0}).toArray( function(err, items){
+    games.find( {"owner":req.session.user._id}).sort( { date : 0}).toArray( function(err, items){
         if( err){
-            console.log( "fetch drills failed");
+            console.log( "fetch games failed");
+            res.status(400).send( err);
         } else {
             res.send( items);
         }
@@ -23,11 +24,17 @@ exports.findAll = function( req, res){
 
 exports.saveAll = function( req, res){
     var user_id = req.session.user._id;
+    console.log( "Game.saveAll owner:", user_id);
     var game_list = req.body.map( function( obj){
         obj.owner = user_id;
         return obj;
     });
-    games.insertMany( game_list).then( function( objs){
-        res.send( objs.ops);
+    games.insertMany( game_list, [], function( err, objs){
+        if( err){
+            console.log( "Game.saveAll error:", err);
+            res.status(400).send( err);
+        } else {
+            res.status(200).send( objs.ops);
+        }
     });
 };

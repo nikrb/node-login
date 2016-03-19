@@ -3,8 +3,18 @@ var CT = require('./modules/country-list');
 var AM = require('./modules/account-manager');
 var EM = require('./modules/email-dispatcher');
 var game = require('./modules/game.js');
+var shot = require('./modules/shot.js');
+var player = require('./modules/player.js');
 
 module.exports = function(app) {
+	
+	app.post( '/shots', function( req, res){
+		shot.saveAll( req, res);
+	});
+	
+	app.post( '/players', function(req, res) {
+	    player.saveAll( req, res);
+	});
 	
 	app.post( '/games', function( req, res){
 		game.saveAll( req, res);
@@ -51,7 +61,7 @@ module.exports = function(app) {
 	
 
 	app.post('/logout', function(req, res){
-		console.log( "post /logout:", req.cookies.user);
+		console.log( "post /logout:");
 		res.clearCookie('user');
 		res.clearCookie('pass');
 		req.session.destroy(function(e){ res.status(200).send( [{logout:true}]); });
