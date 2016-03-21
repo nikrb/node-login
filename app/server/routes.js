@@ -3,7 +3,6 @@ var CT = require('./modules/country-list');
 var AM = require('./modules/account-manager');
 var EM = require('./modules/email-dispatcher');
 var game = require('./modules/game.js');
-<<<<<<< HEAD
 var shot = require('./modules/shot.js');
 var player = require('./modules/player.js');
 
@@ -17,11 +16,6 @@ module.exports = function(app) {
 	    player.saveAll( req, res);
 	});
 	
-=======
-
-module.exports = function(app) {
-	
->>>>>>> a071459c8c7d08020e0e7056cae4d7956ba5dfc1
 	app.post( '/games', function( req, res){
 		game.saveAll( req, res);
 	});
