@@ -32,7 +32,7 @@ module.exports = function(app) {
 				if (o != null){
 				    req.session.user = o;
 					// res.redirect('/home');
-					res.send( [{login:true}]);
+					res.send( [{login:true, user:o.user, email:o.email}]);
 					console.log( "auto login success for [%s]", o.user);
 				}	else{
 					// res.render('login', { title: 'Hello - Please Login To Your Account' });
@@ -54,7 +54,7 @@ module.exports = function(app) {
 					res.cookie('pass', o.pass, { maxAge: 900000 });
 				}
 				console.log( "login post request success for [%s]", o.user);
-				res.status(200).send( [{login:true}]);
+				res.status(200).send( [{login:true, user:o.user, email:o.email}]);
 			}
 		});
 	});
