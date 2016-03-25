@@ -5,8 +5,18 @@ var EM = require('./modules/email-dispatcher');
 var game = require('./modules/game.js');
 var shot = require('./modules/shot.js');
 var player = require('./modules/player.js');
+var sync = require( './modules/sync.js');
+var drill = require( './modules/drill.js');
 
 module.exports = function(app) {
+	
+	app.get( '/drills', function(req, res) {
+	    drill.findAll( req, res);
+	});
+	
+	app.post( '/sync', function(req, res) {
+	    sync.doit( req, res);
+	});
 	
 	app.post( '/shots', function( req, res){
 		shot.saveAll( req, res);
