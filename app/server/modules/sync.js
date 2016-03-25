@@ -14,7 +14,7 @@ MongoClient.connect(url, function(err, db) {
     // db.close();
 });
 
-exports.doit = function( req, res){
+exports.createRoutinesForTargets = function( req, res){
     var user_id = req.session.user._id;
     var data = {};
     var body = req.body[0];
@@ -30,6 +30,7 @@ exports.doit = function( req, res){
     var promises = [];
     for( var i=0; i<body["routines"].length; i++){
         var routine = body["routines"][i];
+        routine.state = "requested";
         // this is a compound promise so wrap in a bespoke promise to get it working
         var acc = new Promise( function( resolve, reject){
             accounts.find( {email:routine.target} ).toArray().then( function(results){

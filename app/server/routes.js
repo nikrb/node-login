@@ -14,8 +14,8 @@ module.exports = function(app) {
 	    drill.findAll( req, res);
 	});
 	
-	app.post( '/sync', function(req, res) {
-	    sync.doit( req, res);
+	app.post( '/synccre', function(req, res) {
+	    sync.createRoutinesForTargets( req, res);
 	});
 	
 	app.post( '/shots', function( req, res){
