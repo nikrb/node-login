@@ -6,7 +6,9 @@ var game = require('./modules/game.js');
 var shot = require('./modules/shot.js');
 var player = require('./modules/player.js');
 var sync = require( './modules/sync.js');
+var workout = require( './modules/workout.js');
 var drill = require( './modules/drill.js');
+var routine = require( './modules/routine.js');
 
 module.exports = function(app) {
 	
@@ -16,6 +18,10 @@ module.exports = function(app) {
 	
 	app.post( '/synccre', function(req, res) {
 	    sync.createRoutinesForTargets( req, res);
+	});
+	
+	app.get( '/syncret', function(req, res) {
+	    sync.retrieveRoutinesForTarget( req, res);
 	});
 	
 	app.post( '/shots', function( req, res){
@@ -150,6 +156,16 @@ module.exports = function(app) {
 	});
 	
 // view & delete accounts //
+	app.get( '/test/workout', function(req,res){
+		workout.findAll( function( e, workouts){
+			res.render( 'workouts', { title : 'Workout List', list : workouts});
+		});
+	});
+	app.get( '/test/routine', function( req, res){
+		routine.findAll( function( e, routines){
+			res.render( "routines", { list : routines});
+		});
+	});
 	
 	app.get('/print', function(req, res) {
 		AM.getAllRecords( function(e, accounts){

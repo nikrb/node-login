@@ -1,4 +1,6 @@
-var MongoClient = require('mongodb').MongoClient;
+var mongodb = require('mongodb');
+var MongoClient = mongodb.MongoClient;
+var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
 var routines, workouts, drills, accounts;
 
@@ -13,6 +15,32 @@ MongoClient.connect(url, function(err, db) {
     accounts = db.collection('accounts');
     // db.close();
 });
+
+exports.retrieveRoutinesForTarget = function( req, res){
+    console.log( "@retrieveRoutinesForTarget");
+    // FIXME: for browser testing
+    var user_id = ( typeof req.session.user === "undefined")? "56e79125168800421b87e5d7" : req.session.user._id;
+
+    var rp = new Promise( function( resolve, reject){
+        routines.find( {owner : user_id}).toArray()
+        .then( function( results){
+            results.forEach( function( obj, ndx, arr){
+                accounts.find( {email:obj.creator}).next( function( e, acc){
+                    // obj.creator_account = acc;
+                    obj.creator_id = acc._id.toHexString();
+                    workouts.find( { owner : obj.creator_id, name : obj.ofWorkout}).next( function( e, workout){
+                        console.log( "got workout:", workout);
+                        obj.workout = workout;
+                        if( ndx === arr.length-1) resolve( results);
+                    });
+                });
+            });
+        });
+    }).then( function( results){
+        console.log( "results:", results);
+        res.status(200).send( results);
+    });
+};
 
 exports.createRoutinesForTargets = function( req, res){
     var user_id = req.session.user._id;
