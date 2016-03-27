@@ -16,6 +16,10 @@ module.exports = function(app) {
 	    drill.findAll( req, res);
 	});
 	
+	app.post( '/drills', function( req, res){
+		drill.create( req, res);
+	});
+	
 	app.post( '/synccre', function(req, res) {
 	    sync.createRoutinesForTargets( req, res);
 	});

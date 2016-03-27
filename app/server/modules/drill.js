@@ -20,3 +20,12 @@ exports.findAll = function( req, res){
         }
     });
 };
+
+exports.create = function( req, res){
+    drills.insertMany( res.body["drills"]).then( function( results){
+        var drill_list = results.map( function( obj){
+            return { ios_id : obj.ios_id, mid : obj._id.toHexString()};
+        });
+        res.send( drill_list);
+    });
+};
