@@ -70,7 +70,7 @@ module.exports = function(app) {
 					res.cookie('pass', o.pass, { maxAge: 900000 });
 				}
 				console.log( "login post request success for [%s]", o.user);
-				res.status(200).send( [{login:true, user:o.user, email:o.email}]);
+				res.status(200).send( [{login:true, user:o.user, email:o.email, mid:o._id.toHexString()}]);
 			}
 		});
 	});
