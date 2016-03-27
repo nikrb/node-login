@@ -48,7 +48,7 @@ module.exports = function(app) {
 				if (o != null){
 				    req.session.user = o;
 					// res.redirect('/home');
-					res.send( [{login:true, user:o.user, email:o.email}]);
+					res.send( [{login:true, user:o.user, email:o.email, mid:o._id.toHexString()}]);
 					console.log( "auto login success for [%s]", o.user);
 				}	else{
 					// res.render('login', { title: 'Hello - Please Login To Your Account' });

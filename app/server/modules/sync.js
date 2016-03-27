@@ -31,7 +31,12 @@ exports.retrieveRoutinesForTarget = function( req, res){
                     workouts.find( { owner : obj.creator_id, name : obj.ofWorkout}).next( function( e, workout){
                         console.log( "got workout:", workout);
                         obj.workout = workout;
-                        if( ndx === arr.length-1) resolve( results);
+                        drills.find( { owner : { $ne : "system"}}).toArray( function( e, drill_list){
+                            if( drill_list.length > 0){
+                                obj.drills = drill_list;
+                            }
+                            if( ndx === arr.length-1) resolve( results);
+                        });
                     });
                 });
             });
