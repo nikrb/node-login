@@ -1,0 +1,22 @@
+
+extends layout
+
+block content
+	h1(style='text-align:center') Routines
+	div.container(style='margin:20px')
+		table.table.table-bordered.table-striped
+			thead
+				tr
+					th(style='width:10%') #
+					th(style='width:15%') Creator
+					th(style='width:15%') Target
+					th(style='width:15%') State
+					th(style='width:45%') Workout
+			tbody
+			- for (var i = 0; i < list.length; i++)
+				tr
+					td= i+1
+					td= list[i].creator_name
+					td= list[i].target_name
+					td= list[i].state
+					td= list[i].ofWorkout

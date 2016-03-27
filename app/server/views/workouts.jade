@@ -1,0 +1,19 @@
+
+extends layout
+
+block content
+	div.container(style='margin:20px')
+		table.table.table-bordered.table-striped
+			thead
+				tr
+					th(style='width:10%') #
+					th(style='width:15%') Owner
+					th(style='width:15%') Name
+					th(style='width:45%') Description
+			tbody
+			- for (var i = 0; i < list.length; i++)
+				tr
+					td= i+1
+					td= list[i].owner_name
+					td= list[i].name
+					td= list[i].desc
