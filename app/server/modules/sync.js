@@ -82,7 +82,7 @@ exports.createRoutinesForTargets = function( req, res){
                                                         error : "insert failed"});
                         } else {
                             var obj = results.ops[0];
-                            var newrou = { ios_id : obj.ios_id, mid : obj._id};
+                            var newrou = { ios_id : obj.ios_id, mid : obj._id.toHexString()};
                             resolve( newrou);
                         }
                     });
