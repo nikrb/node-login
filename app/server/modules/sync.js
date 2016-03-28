@@ -20,29 +20,34 @@ exports.retrieveRoutinesForTarget = function( req, res){
     console.log( "@retrieveRoutinesForTarget");
     // FIXME: for browser testing
     var user_id = ( typeof req.session.user === "undefined")? "56e79125168800421b87e5d7" : req.session.user._id;
-
+    
     var rp = new Promise( function( resolve, reject){
-        routines.find( {owner : user_id}).toArray()
+        routines.find( {owner : ObjectId( user_id)}).toArray()
         .then( function( results){
             results.forEach( function( obj, ndx, arr){
                 accounts.find( {email:obj.creator}).next( function( e, acc){
-                    // obj.creator_account = acc;
                     obj.creator_id = acc._id.toHexString();
-                    workouts.find( { owner : obj.creator_id, name : obj.ofWorkout}).next( function( e, workout){
-                        console.log( "got workout:", workout);
+                    workouts.find( { owner : obj.creator_id, name : obj.workout_name}).next( function( e, workout){
                         obj.workout = workout;
-                        drills.find( { owner : { $ne : "system"}}).toArray( function( e, drill_list){
-                            if( drill_list.length > 0){
-                                obj.drills = drill_list;
-                            }
+                        if( workout.hasDrills.length > 0){
+                            var drill_ids = workout.hasDrills.split( ",");
+                            drills.find( { owner : { $ne : "system"},
+                                            _id : {$in : drill_ids}
+                                        }).toArray( function( e, drill_list){
+                                if( drill_list.length > 0){
+                                    obj.drills = drill_list;
+                                }
+                                if( ndx === arr.length-1) resolve( results);
+                            });
+                        } else {
                             if( ndx === arr.length-1) resolve( results);
-                        });
+                        }
                     });
                 });
             });
         });
     }).then( function( results){
-        console.log( "results:", results);
+        console.log( "retrieveRoutinesForTarget [%s] results:", req.session.user.email, results);
         res.status(200).send( results);
     });
 };
