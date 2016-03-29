@@ -28,6 +28,10 @@ module.exports = function(app) {
 	    sync.retrieveRoutinesForTarget( req, res);
 	});
 	
+	app.post( '/syncrou', function( req, res){
+		sync.sendCompletedRoutines( req, res);
+	});
+	
 	app.post( '/shots', function( req, res){
 		shot.saveAll( req, res);
 	});
