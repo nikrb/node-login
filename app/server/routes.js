@@ -32,6 +32,10 @@ module.exports = function(app) {
 		sync.sendCompletedRoutines( req, res);
 	});
 	
+	app.get( '/synccom', function( req, res){
+		sync.getCompletedRoutines( req, res);
+	});
+	
 	app.post( '/shots', function( req, res){
 		shot.saveAll( req, res);
 	});

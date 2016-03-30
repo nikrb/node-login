@@ -18,9 +18,45 @@ MongoClient.connect(url, function(err, db) {
     // db.close();
 });
 
-exports.sendCompletedRoutines = function( req, res){
+exports.getCompletedRoutines = function( req, res){
     // FIXME: for browser testing
-    var user_id = ( typeof req.session.user === "undefined")? "56e79125168800421b87e5d7" : req.session.user._id;
+    var user_id = ( typeof req.session.user === "undefined")? "56e4e3a466336cc80876aa48" : req.session.user._id;
+    
+    var promise = new Promise( function( resolve, reject){
+        routines.find( { creator_mid : user_id, state : "returned", owner : user_id}).toArray(function( e, routine_list){
+            if( routine_list.length > 0){
+                routine_list.forEach( function( routine, ndx, arr){
+                    routine.state = "closed";
+                    routines.findOneAndUpdate( { _id: ObjectId( routine._id)}, { $set: { state:"retrieved"}})
+                    .then( function( updated_routine){
+                        console.log( "@sync.getCompletedRoutines udpate routine state:", updated_routine);
+                    });
+                    practices.find( { _id : ObjectId( routine.practice_mid)}).next( function( e, prac){
+                        routine.practice = prac;
+                        // NOTE the plurals in the db object, outcomes_mids
+                        var outcome_mids = prac.outcomes_mids.map( function( mid){
+                            return ObjectId( mid);
+                        });
+                        outcomes.find( { _id : { $in : outcome_mids}}).toArray( function( e, outcome_list){
+                            routine.outcome_list = outcome_list;
+                            if( ndx === arr.length-1) resolve( routine_list);
+                        });
+                    });
+                });
+            } else {
+                reject( "found no routines");
+            }
+        });
+    }).then( function( results){
+        // TODO: bulk update on routines - hmmm, can we delete them?
+        console.log( "completed routine list:", results);
+        res.status(200).send( results);
+    });
+};
+
+exports.sendCompletedRoutines = function( req, res){
+    var user_id = req.session.user._id;
+    var user_email = req.session.user.email;
 
     var routine_list = req.body["routines"];
     var practice_list = req.body["practices"];
@@ -56,6 +92,7 @@ exports.sendCompletedRoutines = function( req, res){
             
             practice_list.forEach( function( practice){
                 practice.owner = user_id;
+                practice.by_player_email = user_email;
                 practice.outcomes_mids = getOutcomeMidList( practice.outcome_ids);
             });
             practices.insertMany( practice_list).then( function( new_practices){
@@ -76,9 +113,6 @@ exports.sendCompletedRoutines = function( req, res){
             });
         });
     }).then( function( results){
-        console.log( "routines:", routine_list);
-        console.log( "practices:", practice_list);
-        console.log( "outcomes:", outcome_list);
         var data = routine_list.map( function( obj){
             return { ios_id : obj.ios_id };
         });
@@ -93,22 +127,27 @@ exports.retrieveRoutinesForTarget = function( req, res){
     
     var rp = new Promise( function( resolve, reject){
         routines.find( {owner : ObjectId( user_id)}).toArray()
-        .then( function( results){
-            results.forEach( function( obj, ndx, arr){
-                workouts.find( { owner : obj.creator_mid, name : obj.workout_name}).next( function( e, workout){
-                    obj.workout = workout;
+        .then( function( routines_list){
+            routines_list.forEach( function( routine, ndx, arr){
+                routine.state = "retrieved";
+                routines.findOneAndUpdate( { _id: ObjectId( routine._id)}, { $set: { state:"retrieved"}})
+                .then( function( updated_routine){
+                    console.log( "@sync.retrieveRoutinesForTarget udpate routine state:", updated_routine);
+                });
+                workouts.find( { owner : routine.creator_mid, name : routine.workout_name}).next( function( e, workout){
+                    routine.workout = workout;
                     if( workout.hasDrills.length > 0){
                         var drill_ids = workout.hasDrills.split( ",");
                         drills.find( { owner : { $ne : "system"},
                                         _id : {$in : drill_ids}
                                     }).toArray( function( e, drill_list){
                             if( drill_list.length > 0){
-                                obj.drills = drill_list;
+                                routine.drills = drill_list;
                             }
-                            if( ndx === arr.length-1) resolve( results);
+                            if( ndx === arr.length-1) resolve( routines_list);
                         });
                     } else {
-                        if( ndx === arr.length-1) resolve( results);
+                        if( ndx === arr.length-1) resolve( routines_list);
                     }
                 });
             });
