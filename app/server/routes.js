@@ -47,6 +47,10 @@ module.exports = function(app) {
 	app.post( '/games', function( req, res){
 		game.saveAll( req, res);
 	});
+	
+	app.get( "/manual", function( req, res){
+		res.send( '/manual/index.html');
+	});
 
 // main login page //
 	app.get('/', function(req, res){
