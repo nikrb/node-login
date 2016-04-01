@@ -101,7 +101,7 @@ module.exports = function(app) {
 	
 // creating new accounts //
 	
-	app.put('/signup', function(req, res){
+	app.post('/signup', function(req, res){
 		AM.addNewAccount({
 			name 	: req.body['name'],
 			email 	: req.body['email'],
