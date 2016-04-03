@@ -77,7 +77,7 @@ module.exports = function(app) {
 	app.post('/', function(req, res){
 		AM.manualLogin(req.body['user'], req.body['pass'], function(e, o){
 			if (!o){
-				console.log( "login failed for [%s]", o.user);
+				console.log( "login failed for [%s]", req.body['user']);
 				res.status(400).send(e);
 			}	else{
 				req.session.user = o;
