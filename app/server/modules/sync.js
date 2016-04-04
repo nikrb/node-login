@@ -19,8 +19,8 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.getCompletedRoutines = function( req, res){
-    // FIXME: for browser testing
-    var user_id = ( typeof req.session.user === "undefined")? "56e4e3a466336cc80876aa48" : req.session.user._id;
+    console.log( "@sync.getCompletedRoutines :", req.body);
+    var user_id = req.session.user._id;
     
     var promise = new Promise( function( resolve, reject){
         routines.find( { creator_mid : user_id, state : "returned", owner : user_id}).toArray(function( e, routine_list){
@@ -55,6 +55,7 @@ exports.getCompletedRoutines = function( req, res){
 };
 
 exports.sendCompletedRoutines = function( req, res){
+    console.log( "@sync.sendCompletedRoutines :", req.body);
     var user_id = req.session.user._id;
     var user_email = req.session.user.email;
 
@@ -116,14 +117,14 @@ exports.sendCompletedRoutines = function( req, res){
         var data = routine_list.map( function( obj){
             return { ios_id : obj.ios_id };
         });
+        console.log( "@sync.sendCompletedRoutines :", data);
         res.status(200).send( data);
     });
 }
 
 exports.retrieveRoutinesForTarget = function( req, res){
-    console.log( "@retrieveRoutinesForTarget");
-    // FIXME: for browser testing
-    var user_id = ( typeof req.session.user === "undefined")? "56e79125168800421b87e5d7" : req.session.user._id;
+    console.log( "@retrieveRoutinesForTarget :", req.body);
+    var user_id = req.session.user._id;
     
     var rp = new Promise( function( resolve, reject){
         routines.find( {owner : ObjectId( user_id)}).toArray()
@@ -157,12 +158,13 @@ exports.retrieveRoutinesForTarget = function( req, res){
             }
         });
     }).then( function( results){
-        console.log( "retrieveRoutinesForTarget [%s] results:", req.session.user.email, results);
+        console.log( "@sync.retrieveRoutinesForTarget results:", results);
         res.status(200).send( results);
     });
 };
 
 exports.createRoutinesForTargets = function( req, res){
+    console.log( "@sync.createRoutinesForTargets :", req.body);
     var user_id = req.session.user._id;
     var data = {};
     var body = req.body[0];
@@ -232,14 +234,8 @@ exports.createRoutinesForTargets = function( req, res){
         }
     }
     Promise.all( promises).then( function( results){
-        data["routines"] = [];
-        for( var i=0; i< results.length; i++){
-            if( typeof results[i] !== "undefined"){
-                data["routines"].push( results[i]);
-            }
-        }
-        console.log( "promises complete, return data:", data);
-        res.status(200).send( [data]);
+        console.log( "@sync.createRoutinesForTargets return data:", results);
+        res.status(200).send( results);
     });
 };
 
