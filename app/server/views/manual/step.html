@@ -1,0 +1,165 @@
+
+    <div class="jumbotron">
+        <div class="container">
+            <h1>180 Shooter</h1>
+            <p>HALA Connected Shooter 180 App to track stats for basketball coaches and players</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Tutorial</h2>
+        <p>
+            This tutorial guides the user through first app start-up and registering
+            to viewing routines a player has completed on request
+        </p>
+        <h4>Terms</h4>
+        <ul>
+            <li>Workout - a collection of drills</li>
+            <li>Drill - a description of an exercise to increase basketball skill</li>
+            <li>Practice - imlpementation of a workout. i.e. a player actually performs the 
+            workout drills as an exercise and notes outcomes for each</li>
+            <li>Outcome - player results of performing a drill. Reps and shot made for the drill.</li>
+            <li>Routine - a workout that is requested by a coach for 
+            a player to carry out. In most cases, a synonym for workout.</li>
+        </ul>
+        <h3>Home Screen</h3>
+        <img src="/img/manual/homeScreen.png" alt="homeScreen" >
+        <h3>Step One: Register</h3>
+        <p>First start up the app. On the home screen click the login button at the top right. 
+        When the login screen appears, 
+        click the Create Account button. Fill in your details
+        and hit submit. You should now be registered</p>
+        <img src="img/manual/loginScreen.png" alt="login screen image" >
+        <h3>Step Two: Login</h3>
+        <p>
+            Go back to the login screen, enter your details and click sign in. Click remember-me 
+            to login automatically next time.
+        </p>
+        <h3>Step Three: Name Player(s)</h3>
+        <p>In order to send a routine to a player, the player needs an email address. We will
+        just edit one player for the purposes of this tutorial. Note the routine isn't sent 
+        via email, but in the system; email uniquely identifies someone.</p>
+        <p>
+            From the home screen, click the Team Button and you should see a list of players. Click
+            on the first player and you should see the player details. Either select a player
+            from your contacts list, or enter their name and email manually.
+        </p>
+        <p>
+            Click the save button and return to the home screen.
+        </p>
+        <h3>Step Four: Create a Workout</h3>
+        <img src="img/manual/workoutListEmpty.png" alt="empty worklist" >
+        <p>
+            From the home screen, click the Workouts button. The workout list should be empty.
+            Click the plus (+) sign at the top right to create a new workout.
+        </p>
+        <img src="img/manual/workoutDetailNew.png" >
+        <p>
+            Enter a name and a description for the workout, then click the plus (+) sign
+            next to the Drill list title, to select the drills for this workout.
+        </p>
+        <p>
+            Select the top two drills for the purposes of this tutorial. 
+            Then click Done to return to the workout detail view and click Save.
+        </p>
+        <img src="img/manual/drillListSelection.png">
+        <h3>Step Five: Assign Workout to Player(s)</h3>
+        <p>
+            You should still be in the workouts screen, if not, click the workouts 
+            button in the home screen.
+        </p>
+        <img src='img/manual/workoutListWithWorkout.png' >
+        <p>
+            Click the envelope icon on the workout line to assign a requested routine
+            to a player(s).
+        </p>
+        <img src='img/manual/workoutPlayerSelection.png' >
+        <p>
+            Select the player we entered the email for and click Save.
+            <i>You can select multiple players here, but for this tutorial we only
+            have one player with an email.</i>
+        </p>
+        <img src='img/manual/workoutListWithRoutine.png' >
+        <p>
+            The workout list should now contain an entry in the Requested section.
+            Note the user the routine is destined for.
+        </p>
+        <h3>Step Six: Perform Sync</h3>
+        <p>
+            To actually send the workout to players we need to perform a sync.
+            There are two types of sync, coach and player. Player sync lets players
+            retrieve workouts requested by their coach and return them when they have
+            completed them. Coach sync lets coach send workouts to players and
+            retrieve them to view the outcome when the player has completed them.
+            We will be using coach sync for this tutorial.
+        </p>
+        <p>
+            Return to the home page and ensure we are logged in. The home screen should 
+            display your name and logout in the top right if you are logged in, if 
+            login is displayed, click it and login.
+            From the home screen, click the sync button. You will now see the sync
+            screen with a whirring activity indicator, when it stops whirring 
+            you will see the list of requested routines.
+        </p>
+        <img src='img/manual/syncRoutinesWaiting.png'>
+        <p>
+            Click the Coach Sync button and the activity indicator will start to whir again.
+            When it stops whirring you should see the sent routine listed, see image below.
+        </p>
+        <img src='img/manual/syncRequestedRoutines.png'>
+        <p>
+            Note the sync output:
+            <ul>
+                <li>No New Drills To Process - We didn't create any new drills</li>
+                <li>Routine:workout 1 [requested] to [bea@gmail.com] and ok - The
+                routine was sent successfully</li>
+                <li>Workout:workout 1 - We created a new workout, which was successfully
+                sent</li>
+                <li>No Completed Routines Found - There were no player completed
+                routines to fetch</li>
+            </ul>
+        </p>
+        <h3>Step Seven: Wait</h3>
+        <p>Now we wait for the targetted player to complete the routine and
+        return it to us. This will be covered in another tutorial</p>
+        <h3>Step Eight: Retrieve Completed Routines</h3>
+        <p>
+            From time to time you will want to check for any routine requests completed
+            by players. Ensure you are logged in at the home screen, then click the
+            sync button. Wait for the activity indicator to stop whirring and then
+            click the coach sync button. The activity indicator will start to whir again
+            and when it stops, any returned routines will be listed, see image below.
+        </p>
+        <img src='img/manual/syncReturnedRoutines.png' >
+        <h3>Step Nine: Check Outcomes</h3>
+        <p>
+            Finally, we want to see how well the player performed the requested routines.
+            Navigate to the home page and click the Practice Reports button. This will
+            take you to the practice list, as shown below.
+        </p>
+        <img src='img/manual/practiceReportList.png'>
+        <p>
+            Notice the practice list has three sections.
+            <ul>
+                <li>Orphan - this shows practices who's workouts have been
+                deleted.</li>
+                <li>Workout Name - Each workout is listed as a section, with each
+                practice performed and the date. <i>This shows practices completed
+                by me, meaning me as a player having practiced a workout locally using
+                my device - in other words, private player practices that were
+                not requested by coach</i></li>
+                <li>
+                    Routines - This section lists the workout practices completed and returned
+                    by players to their coach.
+                </li>
+            </ul>
+            For the purposes of the tutorial, we have one listed in the requested
+            section. In order to see the outcome, click on the routine and you will 
+            be presented with a view showing the outcome for each drill in the workout.
+        </p>
+        <img src='img/manual/practiceOutcomes.png'>
+        <p>
+            That concludes this tutorial, thanx for participating.
+        </p>
+    </div>
+    

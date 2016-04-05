@@ -49,7 +49,14 @@ module.exports = function(app) {
 	});
 	
 	app.get( "/manual", function( req, res){
-		res.send( '/manual/index.html');
+		switch( req.query.page){
+			case 'step':
+				res.render( "manual/step");
+				break;
+			default:
+				res.render( "manual/index");
+				break;
+		}
 	});
 
 // main login page //
