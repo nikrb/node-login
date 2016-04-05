@@ -18,29 +18,35 @@ MongoClient.connect(url, function(err, db) {
     // db.close();
 });
 
-exports.getCompletedRoutines = function( req, res){
-    console.log( "@sync.getCompletedRoutines :", req.body);
+exports.retrieveRoutinesForTarget = function( req, res){
+    console.log( "@retrieveRoutinesForTarget :", req.body);
     var user_id = req.session.user._id;
     
-    var promise = new Promise( function( resolve, reject){
-        routines.find( { creator_mid : user_id, state : "returned", owner : user_id}).toArray(function( e, routine_list){
-            if( routine_list.length > 0){
-                routine_list.forEach( function( routine, ndx, arr){
-                    routine.state = "closed";
-                    routines.findOneAndUpdate( { _id: ObjectId( routine._id)}, { $set: { state:"closed"}})
+    var rp = new Promise( function( resolve, reject){
+        routines.find( {owner : ObjectId( user_id), state:"requested"}).toArray()
+        .then( function( routines_list){
+            if( routines_list.length > 0){
+                routines_list.forEach( function( routine, ndx, arr){
+                    routine.state = "retrieved";
+                    routines.findOneAndUpdate( { _id: ObjectId( routine._id)}, { $set: { state:"retrieved"}})
                     .then( function( updated_routine){
-                        console.log( "@sync.getCompletedRoutines udpate routine state:", updated_routine);
+                        console.log( "@sync.retrieveRoutinesForTarget udpate routine state:", updated_routine);
                     });
-                    practices.find( { _id : ObjectId( routine.practice_mid)}).next( function( e, prac){
-                        routine.practice = prac;
-                        // NOTE the plurals in the db object, outcomes_mids
-                        var outcome_mids = prac.outcomes_mids.map( function( mid){
-                            return ObjectId( mid);
-                        });
-                        outcomes.find( { _id : { $in : outcome_mids}}).toArray( function( e, outcome_list){
-                            routine.outcome_list = outcome_list;
-                            if( ndx === arr.length-1) resolve( routine_list);
-                        });
+                    workouts.find( { owner : routine.creator_mid, name : routine.workout_name}).next( function( e, workout){
+                        routine.workout = workout;
+                        if( workout.hasDrills.length > 0){
+                            var drill_ids = workout.hasDrills.split( ",");
+                            drills.find( { owner : { $ne : "system"},
+                                            _id : {$in : drill_ids}
+                                        }).toArray( function( e, drill_list){
+                                if( drill_list.length > 0){
+                                    routine.drills = drill_list;
+                                }
+                                if( ndx === arr.length-1) resolve( routines_list);
+                            });
+                        } else {
+                            if( ndx === arr.length-1) resolve( routines_list);
+                        }
                     });
                 });
             } else {
@@ -48,8 +54,7 @@ exports.getCompletedRoutines = function( req, res){
             }
         });
     }).then( function( results){
-        // TODO: bulk update on routines - hmmm, can we delete them?
-        console.log( "completed routine list:", results);
+        console.log( "@sync.retrieveRoutinesForTarget results:", results);
         res.status(200).send( results);
     });
 };
@@ -122,47 +127,6 @@ exports.sendCompletedRoutines = function( req, res){
     });
 }
 
-exports.retrieveRoutinesForTarget = function( req, res){
-    console.log( "@retrieveRoutinesForTarget :", req.body);
-    var user_id = req.session.user._id;
-    
-    var rp = new Promise( function( resolve, reject){
-        routines.find( {owner : ObjectId( user_id)}).toArray()
-        .then( function( routines_list){
-            if( routines_list.length > 0){
-                routines_list.forEach( function( routine, ndx, arr){
-                    routine.state = "retrieved";
-                    routines.findOneAndUpdate( { _id: ObjectId( routine._id)}, { $set: { state:"retrieved"}})
-                    .then( function( updated_routine){
-                        console.log( "@sync.retrieveRoutinesForTarget udpate routine state:", updated_routine);
-                    });
-                    workouts.find( { owner : routine.creator_mid, name : routine.workout_name}).next( function( e, workout){
-                        routine.workout = workout;
-                        if( workout.hasDrills.length > 0){
-                            var drill_ids = workout.hasDrills.split( ",");
-                            drills.find( { owner : { $ne : "system"},
-                                            _id : {$in : drill_ids}
-                                        }).toArray( function( e, drill_list){
-                                if( drill_list.length > 0){
-                                    routine.drills = drill_list;
-                                }
-                                if( ndx === arr.length-1) resolve( routines_list);
-                            });
-                        } else {
-                            if( ndx === arr.length-1) resolve( routines_list);
-                        }
-                    });
-                });
-            } else {
-                resolve( []);
-            }
-        });
-    }).then( function( results){
-        console.log( "@sync.retrieveRoutinesForTarget results:", results);
-        res.status(200).send( results);
-    });
-};
-
 exports.createRoutinesForTargets = function( req, res){
     console.log( "@sync.createRoutinesForTargets :", req.body);
     var user_id = req.session.user._id;
@@ -234,9 +198,51 @@ exports.createRoutinesForTargets = function( req, res){
         }
     }
     Promise.all( promises).then( function( results){
-        console.log( "@sync.createRoutinesForTargets return data:", results);
-        res.status(200).send( results);
+         data["routines"] = [];
+        for( var i=0; i< results.length; i++){
+            if( typeof results[i] !== "undefined"){
+                data["routines"].push( results[i]);
+            }
+        }
+        console.log( "@sync.createRoutinesForTargets return data:", data);
+        res.status(200).send( [data]);
     });
 };
 
+
+exports.getCompletedRoutines = function( req, res){
+    console.log( "@sync.getCompletedRoutines :", req.body);
+    var user_id = req.session.user._id;
+    
+    var promise = new Promise( function( resolve, reject){
+        routines.find( { creator_mid : user_id, state : "returned", owner : user_id}).toArray(function( e, routine_list){
+            if( routine_list.length > 0){
+                routine_list.forEach( function( routine, ndx, arr){
+                    routine.state = "closed";
+                    routines.findOneAndUpdate( { _id: ObjectId( routine._id)}, { $set: { state:"closed"}})
+                    .then( function( updated_routine){
+                        console.log( "@sync.getCompletedRoutines udpate routine state:", updated_routine);
+                    });
+                    practices.find( { _id : ObjectId( routine.practice_mid)}).next( function( e, prac){
+                        routine.practice = prac;
+                        // NOTE the plurals in the db object, outcomes_mids
+                        var outcome_mids = prac.outcomes_mids.map( function( mid){
+                            return ObjectId( mid);
+                        });
+                        outcomes.find( { _id : { $in : outcome_mids}}).toArray( function( e, outcome_list){
+                            routine.outcome_list = outcome_list;
+                            if( ndx === arr.length-1) resolve( routine_list);
+                        });
+                    });
+                });
+            } else {
+                resolve( []);
+            }
+        });
+    }).then( function( results){
+        // TODO: bulk update on routines - hmmm, can we delete them?
+        console.log( "completed routine list:", results);
+        res.status(200).send( results);
+    });
+};
 
