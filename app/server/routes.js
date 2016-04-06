@@ -53,6 +53,9 @@ module.exports = function(app) {
 			case 'step':
 				res.render( "manual/step");
 				break;
+			case 'playertut':
+				res.render( "manual/playertut");
+				break;
 			default:
 				res.render( "manual/index");
 				break;
