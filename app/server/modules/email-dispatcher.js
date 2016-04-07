@@ -1,35 +1,40 @@
+var nodemailer = require('nodemailer');
+var mailgun = require( 'nodemailer-mailgun-transport');
 
 var EM = {};
 module.exports = EM;
 
-EM.server = require("emailjs/email").server.connect(
-{
-	host 	    : process.env.EMAIL_HOST || 'smtp.gmail.com',
-	user 	    : process.env.EMAIL_USER || 'your-email-address@gmail.com',
-	password    : process.env.EMAIL_PASS || '1234',
-	ssl		    : true
-});
+var auth = { auth : {
+	api_key: "key-d3b5ebd3de3bc836cd26cb16fad5ceb0",
+	domain: "sandboxbe6f5075f95b48d9afb230da0e2cdaf9.mailgun.org"
+}};
+var transporter = nodemailer.createTransport( mailgun( auth));
 
-EM.dispatchResetPasswordLink = function(account, callback)
-{
-	EM.server.send({
-		from         : process.env.EMAIL_FROM || 'Node Login <do-not-reply@gmail.com>',
-		to           : account.email,
-		subject      : 'Password Reset',
-		text         : 'something went wrong... :(',
-		attachment   : EM.composeEmail(account)
-	}, callback );
-}
+EM.dispatchResetPasswordLink = function(account, callback){
+	var mail_options = {
+		from: "180-Shooter <do-not-reply@shooter.com>",
+		to: account.email,
+		subject : "Password Reset",
+		html: composeEmail( account)
+	};
+	
+	transporter.sendMail( mail_options, function(error, info){
+	    if(error){
+	        return console.log(error);
+	    }
+	    console.log('Message sent: ', info);
+	    if( callback){
+	    	callback( null, true);
+	    }
+	});
+};
 
-EM.composeEmail = function(o)
-{
-	var link = 'http://node-login.braitsch.io/reset-password?e='+o.email+'&p='+o.pass;
-	var html = "<html><body>";
-		html += "Hi "+o.name+",<br><br>";
+function composeEmail(o){
+	var link = 'https://node-browser-knik.c9users.io/reset-password?e='+o.email+'&p='+o.pass;
+	var html = "Hi "+o.name+",<br><br>";
 		html += "Your username is <b>"+o.user+"</b><br><br>";
 		html += "<a href='"+link+"'>Click here to reset your password</a><br><br>";
 		html += "Cheers,<br>";
-		html += "<a href='http://twitter.com/braitsch'>braitsch</a><br><br>";
-		html += "</body></html>";
-	return  [{data:html, alternative:true}];
+	return  html;
 }
+
