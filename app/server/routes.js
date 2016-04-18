@@ -50,11 +50,14 @@ module.exports = function(app) {
 	
 	app.get( "/manual", function( req, res){
 		switch( req.query.page){
-			case 'step':
-				res.render( "manual/step");
+			case 'coachtut':
+				res.render( "manual/coachtut");
 				break;
 			case 'playertut':
 				res.render( "manual/playertut");
+				break;
+			case 'gametut':
+				res.render( "manual/gametut");
 				break;
 			default:
 				res.render( "manual/index");
