@@ -1,4 +1,6 @@
-var MongoClient = require('mongodb').MongoClient;
+var mongodb = require('mongodb');
+var MongoClient = mongodb.MongoClient;
+var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
 var games;
 
@@ -12,11 +14,12 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.findAll = function( req, res){
-    games.find( {"owner":req.session.user._id}).sort( { date : 0}).toArray( function(err, items){
+    games.find( {"owner": req.session.user._id}).toArray( function(err, items){
         if( err){
-            console.log( "fetch games failed");
+            console.log( "@Game.findAll failed:", err);
             res.status(400).send( err);
         } else {
+            console.log( "@Game.findAll results", items);
             res.send( items);
         }
     });
@@ -29,12 +32,17 @@ exports.saveAll = function( req, res){
         obj.owner = user_id;
         return obj;
     });
+    // we only save new games
     games.insertMany( game_list, [], function( err, objs){
         if( err){
-            console.log( "Game.saveAll error:", err);
+            console.log( "@Game.saveAll error:", err);
             res.status(400).send( err);
         } else {
-            res.status(200).send( objs.ops);
+            var results = objs.ops.map( function( obj){
+                return { ios_id:obj.ios_id, _id:obj._id.toHexString()};
+            });
+            console.log( "@Game.saveAll results:", results);
+            res.status(200).send( results);
         }
     });
 };
