@@ -12,9 +12,10 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.findAll = function( req, res){
-    players.find( {"owner" : req.session.user._id}).sort( { name : 1}).toArray( function(err, items){
+    console.log( "player.FindAll for owner:", req.session.user._id);
+    players.find( {"owner" : req.session.user._id}).toArray( function(err, items){
         if( err){
-            console.log( "fetch players failed");
+            console.log( "fetch players failed:", err);
             res.status(400).send( err);
         } else {
             res.send( items);
