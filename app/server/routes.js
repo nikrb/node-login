@@ -62,15 +62,9 @@ module.exports = function(app) {
 		workout.saveAll( req, res);
 	});
 	app.get( '/workouts', function(req,res){
-		workout.findAll( function( e, workouts){
-			if( e){
-				console.log( "get workouts failed:", e);
-				res.status( 400).send( e);
-			} else {
-				res.send( workouts);
-			}
-		});
+		workout.findAll( req, res);
 	});
+	
 	app.get( '/routines', function( req, res){
 		routine.findAll( function( e, routines){
 			if( e){

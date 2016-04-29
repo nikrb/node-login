@@ -22,8 +22,8 @@ exports.findAll = function( callback){
 		} else {
 		    var promises = [];
 		    for( var i=0; i<routine_list.length; i++){
-		        var routine = routine_list[i];
 		        var p = new Promise( function( resolve, reject){
+		            var routine = routine_list[i];
                     accounts.find( { email : routine.creator}).limit(1).next( function( acc_err, routine_creator) {
                         if( acc_err){
                             routine.creator_name = "not found";

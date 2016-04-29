@@ -15,33 +15,16 @@ MongoClient.connect(url, function(err, db) {
     // db.close();
 });
 
-exports.findAll = function( callback){
-	workouts.find().toArray( function(e, res) {
-		if( e){
-		    callback(e);
-		} else {
-		    var promises = [];
-		    for( var i=0; i<res.length; i++){
-		        var p = new Promise( function( resolve, reject){
-		            var workout = res[i];
-                    accounts.find( { _id : ObjectId( workout.owner)}).limit(1).next( function( acc_err, workout_owner){
-                        if( acc_err){
-                            workout.owner_name = "not found";
-                            resolve( workout);
-                        } else {
-                            workout.owner_name = workout_owner.name;
-                            resolve( workout);
-                        }
-                    });
-		        });
-		        promises.push(p);
-		    }
-		    
-    		Promise.all( promises).then( function( results){
-    		    callback( null, results);
-    		});
-		}
-	});
+exports.findAll = function( req, res){
+    workouts.find( { owner : req.session.user._id}).toArray( function( err, workout_list){
+        if( err){
+            console.log( "@Workout.findAll failed:", err);
+            res.status(400).send( [{ error:true, message:err}]);
+        } else {
+            console.log( "@Workout.findAll results:", workout_list);
+            res.status(200).send( workout_list);
+        }
+    });
 };
 
 exports.saveAll = function( req, res){
