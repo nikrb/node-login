@@ -12,12 +12,13 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.findAll = function( req, res){
-    shots.find( {"owner":req.session.user._id, "game" : req.body.inGame}).
-            sort( { quarter : 0}).toArray( function(err, items){
+    shots.find( {"owner":req.session.user._id}).
+            toArray( function(err, items){
         if( err){
-            console.log( "fetch shots failed");
+            console.log( "@Shot.findAll failed:", err);
             res.status(400).send( err);
         } else {
+            console.log( "@Shot.findAll results:", items);
             res.send( items);
         }
     });
@@ -30,12 +31,17 @@ exports.saveAll = function( req, res){
         obj.owner = user_id;
         return obj;
     });
-    shots.insertMany( shot_list, [], function( err, results){
+    // we only save new shots
+    shots.insertMany( shot_list, [], function( err, objs){
         if( err){
-            console.log( "Shots.saveAll error:", err);
+            console.log( "@Shot.saveAll error:", err);
             res.status(400).send( err);
         } else {
-            res.send( results.ops);
+            var results = objs.ops.map( function( obj){
+                return { ios_id:obj.ios_id, _id:obj._id.toHexString()};
+            });
+            console.log( "@Shot.saveAll results:", results);
+            res.send( results);
         }
     });
 };
