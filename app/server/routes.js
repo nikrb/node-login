@@ -36,17 +36,52 @@ module.exports = function(app) {
 		sync.getCompletedRoutines( req, res);
 	});
 	
+	app.get( '/shots', function(req, res) {
+	    shot.findAll( req, res);
+	});
 	app.post( '/shots', function( req, res){
 		shot.saveAll( req, res);
+	});
+	
+	app.get( '/players', function( req, res){
+		player.findAll( req, res);
 	});
 	
 	app.post( '/players', function(req, res) {
 	    player.saveAll( req, res);
 	});
 	
+	app.get( '/games', function(req, res) {
+	    game.findAll( req, res);
+	});
 	app.post( '/games', function( req, res){
 		game.saveAll( req, res);
 	});
+	
+	app.post( '/workouts', function( req, res){
+		workout.saveAll( req, res);
+	});
+	app.get( '/workouts', function(req,res){
+		workout.findAll( function( e, workouts){
+			if( e){
+				console.log( "get workouts failed:", e);
+				res.status( 400).send( e);
+			} else {
+				res.send( workouts);
+			}
+		});
+	});
+	app.get( '/routines', function( req, res){
+		routine.findAll( function( e, routines){
+			if( e){
+				console.log( "get routines failed:", e);
+				res.status(400).send( e);
+			} else {
+				res.send( routines);
+			}
+		});
+	});
+	
 	
 	app.get( "/manual", function( req, res){
 		switch( req.query.page){
@@ -281,19 +316,6 @@ module.exports = function(app) {
 			}	else{
 				res.status(400).send('unable to update password');
 			}
-		});
-	});
-	
-	
-	// view & delete accounts //
-	app.get( '/test/workout', function(req,res){
-		workout.findAll( function( e, workouts){
-			res.render( 'workouts', { title : 'Workout List', list : workouts});
-		});
-	});
-	app.get( '/test/routine', function( req, res){
-		routine.findAll( function( e, routines){
-			res.render( "routines", { list : routines});
 		});
 	});
 	
