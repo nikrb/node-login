@@ -215,6 +215,7 @@ exports.getCompletedRoutines = function( req, res){
     var user_id = req.session.user._id;
     
     var promise = new Promise( function( resolve, reject){
+        // FIXME: handle errors
         routines.find( { creator_mid : user_id, state : "returned", owner : user_id}).toArray(function( e, routine_list){
             if( routine_list.length > 0){
                 routine_list.forEach( function( routine, ndx, arr){
