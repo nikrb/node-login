@@ -22,8 +22,9 @@ exports.findAll = function( req, res){
 };
 
 exports.create = function( req, res){
-    drills.insertMany( res.body["drills"]).then( function( results){
-        var drill_list = results.map( function( obj){
+    drills.insertMany( req.body["drills"]).then( function( results){
+        console.log( "create new drills:", results.ops);
+        var drill_list = results.ops.map( function( obj){
             return { ios_id : obj.ios_id, mid : obj._id.toHexString()};
         });
         res.send( drill_list);
