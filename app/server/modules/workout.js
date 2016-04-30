@@ -8,11 +8,10 @@ var accounts;
 var url = 'mongodb://localhost:27017/node-login';
 MongoClient.connect(url, function(err, db) {
     assert.equal(null, err);
-    console.log("workout Connected.");
+    console.log("Workout Connected.");
     
     workouts = db.collection( 'workouts');
     accounts = db.collection( 'accounts');
-    // db.close();
 });
 
 exports.findAll = function( req, res){

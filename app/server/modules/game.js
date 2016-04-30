@@ -7,10 +7,9 @@ var games;
 var url = 'mongodb://localhost:27017/node-login';
 MongoClient.connect(url, function(err, db) {
     assert.equal(null, err);
-    console.log("Connected.");
+    console.log("Game Connected.");
     
     games = db.collection( 'games');
-    // db.close();
 });
 
 exports.findAll = function( req, res){

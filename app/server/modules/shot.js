@@ -5,10 +5,9 @@ var shots;
 var url = 'mongodb://localhost:27017/node-login';
 MongoClient.connect(url, function(err, db) {
     assert.equal(null, err);
-    console.log("Connected.");
+    console.log("Shot Connected.");
     
     shots = db.collection( 'shots');
-    // db.close();
 });
 
 exports.findAll = function( req, res){

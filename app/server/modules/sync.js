@@ -7,7 +7,7 @@ var routines, workouts, drills, accounts, practices, outcomes;
 var url = 'mongodb://localhost:27017/node-login';
 MongoClient.connect(url, function(err, db) {
     assert.equal(null, err);
-    console.log("Connected.");
+    console.log("Sync Connected.");
     
     accounts = db.collection('accounts');
     routines = db.collection( 'routines');
@@ -15,7 +15,6 @@ MongoClient.connect(url, function(err, db) {
     drills = db.collection( 'drills');
     practices = db.collection( "practices");
     outcomes = db.collection( "outcomes");
-    // db.close();
 });
 
 exports.retrieveRoutinesForTarget = function( req, res){
