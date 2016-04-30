@@ -8,6 +8,8 @@ var player = require('./modules/player.js');
 var sync = require( './modules/sync.js');
 var workout = require( './modules/workout.js');
 var drill = require( './modules/drill.js');
+var practice = require( './modules/practice.js');
+var outcome = require( './modules/outcome.js');
 var routine = require( './modules/routine.js');
 
 module.exports = function(app) {
@@ -65,15 +67,25 @@ module.exports = function(app) {
 		workout.findAll( req, res);
 	});
 	
+	app.get( '/practices', function( req, res){
+		practice.findAll( req, res);
+	});
+	app.post( '/practices', function( req, res){
+		practice.saveAll( req, res);
+	});
+	
+	app.get( '/outcomes', function( req, res){
+		outcome.findAll( req, res);
+	});
+	app.post( '/outcomes', function( req, res){
+		outcome.saveAll( req, res);
+	});
+	
 	app.get( '/routines', function( req, res){
-		routine.findAll( function( e, routines){
-			if( e){
-				console.log( "get routines failed:", e);
-				res.status(400).send( e);
-			} else {
-				res.send( routines);
-			}
-		});
+		routine.findAll( req, res);
+	});
+	app.post( '/routines', function( req, res){
+		routine.saveAll( req, res);
 	});
 	
 	
