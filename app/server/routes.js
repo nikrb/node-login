@@ -343,10 +343,15 @@ module.exports = function(app) {
 	    });
 	});
 	
+	/* yipes
 	app.get('/reset', function(req, res) {
 		AM.delAllRecords(function(){
 			res.redirect('/print');	
 		});
+	});
+	*/
+	app.get( '/product', function( req, res){
+		res.render( 'product');
 	});
 	
 	app.get('*', function(req, res) {
