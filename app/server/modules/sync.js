@@ -26,12 +26,13 @@ exports.retrieveRoutinesForTarget = function( req, res){
         .then( function( routines_list){
             if( routines_list.length > 0){
                 routines_list.forEach( function( routine, ndx, arr){
+                    console.log( "@sync.retrieveRoutinesForTarget routine:", routine);
                     routine.state = "retrieved";
                     routines.findOneAndUpdate( { _id: ObjectId( routine._id)}, { $set: { state:"retrieved"}})
                     .then( function( updated_routine){
                         console.log( "@sync.retrieveRoutinesForTarget udpate routine state:", updated_routine);
                     });
-                    workouts.find( { owner : routine.creator_mid, name : routine.workout_name}).next( function( e, workout){
+                    workouts.find( { _id : ObjectId( routine.workout_mid)}).next( function( e, workout){
                         routine.workout = workout;
                         if( workout.hasDrills.length > 0){
                             var drill_ids = workout.hasDrills.split( ",");
@@ -59,62 +60,21 @@ exports.retrieveRoutinesForTarget = function( req, res){
 };
 
 exports.sendCompletedRoutines = function( req, res){
-    console.log( "@sync.sendCompletedRoutines :", req.body);
-    var user_id = req.session.user._id;
-    var user_email = req.session.user.email;
+    console.log( "@sync.sendCompletedRoutines user:", req.session.user._id);
 
     var routine_list = req.body["routines"];
-    var practice_list = req.body["practices"];
-    var outcome_list = req.body["outcomes"].map( function( obj){
-        obj.owner = user_id;
-        return obj;
-    });
-    
-    function getOutcomeMidList( ios_id_list){
-        var ret = [];
-        for( var i =0; i<outcome_list.length; i++){
-            var outcome = outcome_list[i];
-            if( ios_id_list.indexOf( outcome.ios_id) !== -1){
-                ret.push( outcome._id.toHexString());
-            }
-        }
-        return ret;
-    }
-    function getRoutinePracticeMid( practice_ios_id, inserted_practices ){
-        for( var i =0; i<inserted_practices.length; i++){
-            var practice = inserted_practices[i];
-            if( practice.ios_id === practice_ios_id) return practice._id.toHexString();
-        }
-        return null;
-    }
     
     var p = new Promise( function( resolve, reject){
-        outcomes.insertMany( outcome_list).then( function( new_outcomes){
-            var inserted_outcomes = new_outcomes.ops;
-            inserted_outcomes.forEach( function( obj){
-                obj.mid = obj._id.toHexString();
-            });
-            
-            practice_list.forEach( function( practice){
-                practice.owner = user_id;
-                practice.by_player_email = user_email;
-                practice.outcomes_mids = getOutcomeMidList( practice.outcome_ids);
-            });
-            practices.insertMany( practice_list).then( function( new_practices){
-                var inserted_practices = new_practices.ops;
-                routine_list.forEach( function( routine, ndx, arr){
-                    routine.practice_mid = getRoutinePracticeMid( routine.practice_ios_id, inserted_practices);
-                    routines.findOneAndUpdate( { _id : ObjectId( routine.mid)},
-                                { $set : { practice_mid : routine.practice_mid, 
-                                            state : "returned",
-                                            owner : routine.creator_mid
-                                }})
-                    .then( function( updated_routine){
-                        if( ndx === arr.length -1){
-                            resolve( true);
-                        }
-                    });
-                });
+        routine_list.forEach( function( routine, ndx, arr){
+            routines.findOneAndUpdate( { _id : ObjectId( routine.mid)},
+                        { $set : { practice_mid : routine.practice_mid, 
+                                    state : "returned",
+                                    owner : routine.creator_mid
+                        }})
+            .then( function( updated_routine){
+                if( ndx === arr.length -1){
+                    resolve( true);
+                }
             });
         });
     }).then( function( results){
@@ -124,28 +84,19 @@ exports.sendCompletedRoutines = function( req, res){
         console.log( "@sync.sendCompletedRoutines :", data);
         res.status(200).send( data);
     });
-}
+};
 
 exports.createRoutinesForTargets = function( req, res){
-    console.log( "@sync.createRoutinesForTargets :", req.body);
-    var user_id = req.session.user._id;
+    console.log( "@sync.createRoutinesForTargets user:", req.session.user._id);
+    // var user_id = req.session.user._id;
     var data = {};
     var body = req.body[0];
-    function setObjMids( objs){
-        var ret = objs.map( function( obj){
-            var o = {};
-            o.ios_id = obj.ios_id;
-            o.mid = obj._id;
-            return o;
-        });
-        return ret;
-    }
     var promises = [];
     for( var i=0; i<body["routines"].length; i++){
-        var routine = body["routines"][i];
-        routine.state = "requested";
         // this is a compound promise so wrap in a bespoke promise to get it working
         var acc = new Promise( function( resolve, reject){
+            var routine = body["routines"][i];
+            console.log( "@sync.createRoutinesForTargets routine:", routine);
             accounts.find( {email:routine.target} ).toArray().then( function(results){
                 if( results.length == 0){
                     resolve( { ios_id : routine.ios_id, 
@@ -154,6 +105,7 @@ exports.createRoutinesForTargets = function( req, res){
                 } else {
                     var target_user = results[0];
                     routine.owner = target_user._id;
+                    routine.state = "requested";
                     routines.insertOne( routine).then( function( results){
                         if( results.insertedCount == 0){
                             console.log( "@sync.doit routine insert one failed:", routine.target);
@@ -171,31 +123,6 @@ exports.createRoutinesForTargets = function( req, res){
         });
         promises.push( acc);
     }
-
-    if( body.hasOwnProperty( "workouts")){
-        var workout_list = body["workouts"].map( function( obj){
-            obj.owner = user_id;
-            return obj;
-        });
-        // it seems these simple promises work ok
-        var p = workouts.insertMany( workout_list).then( function( results){
-            var ret_workouts = setObjMids( results.ops);
-            data["workouts"] = ret_workouts;
-        });
-        promises.push( p);
-        
-        if( body.hasOwnProperty( "drills")) {
-            var drill_list = body["drills"].map( function( obj){
-                obj.owner = user_id;
-                return obj;
-            });
-            var dp = drills.insertMany( drill_list).then( function( results){
-                    var ret_drills = setObjMids( results.ops);
-                    data["drills"] = ret_drills;
-            });
-            promises.push( dp);
-        }
-    }
     Promise.all( promises).then( function( results){
          data["routines"] = [];
         for( var i=0; i< results.length; i++){
@@ -210,7 +137,7 @@ exports.createRoutinesForTargets = function( req, res){
 
 
 exports.getCompletedRoutines = function( req, res){
-    console.log( "@sync.getCompletedRoutines :", req.body);
+    console.log( "@sync.getCompletedRoutines user:", req.session.user._id);
     var user_id = req.session.user._id;
     
     var promise = new Promise( function( resolve, reject){
@@ -224,12 +151,13 @@ exports.getCompletedRoutines = function( req, res){
                         console.log( "@sync.getCompletedRoutines udpate routine state:", updated_routine);
                     });
                     practices.find( { _id : ObjectId( routine.practice_mid)}).next( function( e, prac){
+                        console.log( "@sync.getCompletedRoutines found practice:", prac);
                         routine.practice = prac;
-                        // NOTE the plurals in the db object, outcomes_mids
-                        var outcome_mids = prac.outcomes_mids.map( function( mid){
+                        var outcome_arr = prac.outcome_mids.split( ",");
+                        var outcome_ids = outcome_arr.map( function( mid){
                             return ObjectId( mid);
                         });
-                        outcomes.find( { _id : { $in : outcome_mids}}).toArray( function( e, outcome_list){
+                        outcomes.find( { _id : { $in : outcome_ids}}).toArray( function( e, outcome_list){
                             routine.outcome_list = outcome_list;
                             if( ndx === arr.length-1) resolve( routine_list);
                         });
