@@ -11,9 +11,14 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.findAll = function( req, res){
-    drills.find().sort( { type : 1, phase : 1}).toArray( function(err, items){
+    var drill_owners = ["system"];
+    if( typeof req.session.user !== "undefined"){
+        drill_owners.push( req.session.user._id);
+    }
+    drills.find( { owner : { $in : drill_owners}}).sort( { type : 1, phase : 1}).toArray( function(err, items){
         if( err){
-            console.log( "fetch drills failed");
+            console.log( "@drill.findAll failed:", err);
+            res.status(400).send( [{ error:true, message:err}]);
         } else {
             res.send( items);
         }
