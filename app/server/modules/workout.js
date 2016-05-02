@@ -3,7 +3,7 @@ var MongoClient = mongodb.MongoClient;
 var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
 var workouts;
-var accounts;
+var drills;
 
 var url = 'mongodb://localhost:27017/node-login';
 MongoClient.connect(url, function(err, db) {
@@ -11,17 +11,54 @@ MongoClient.connect(url, function(err, db) {
     console.log("Workout Connected.");
     
     workouts = db.collection( 'workouts');
-    accounts = db.collection( 'accounts');
+    drills = db.collection( 'drills');
 });
 
 exports.findAll = function( req, res){
+    console.log( "@workout.findAll for user:", req.session.user._id);
     workouts.find( { owner : req.session.user._id}).toArray( function( err, workout_list){
-        if( err){
-            console.log( "@Workout.findAll failed:", err);
-            res.status(400).send( [{ error:true, message:err}]);
+        console.log( "found workout count:", workout_list.length);
+        if( err || workout_list.length === 0){
+            if( err){
+                console.log( "@Workout.findAll failed:", err);
+                res.status(400).send( [{ error:true, message:err}]);
+            } else {
+                console.log( "@Workout.findAll found no workouts");
+                res.status(200).send( [{error:true, message:{ msg:"no workouts found"}} ]);
+            }
         } else {
-            console.log( "@Workout.findAll results:", workout_list);
-            res.status(200).send( workout_list);
+            var promises = [];
+            // return any drills that are not owned by the user or system (just in case)
+            var np = new Promise( function( resolve, reject){
+                var drill_list = [];
+                workout_list.forEach( function( workout, ndx, arr){
+                    console.log( "@workout.findAll getting drills for workout:", workout);
+                    if( typeof workout.hasDrills !== "undefined"){
+                        var wd = workout.hasDrills.split(",");
+                        var workout_drills = wd.map( function( ele){
+                            return ObjectId( ele);
+                        });
+                        var owners = [ "system", req.session.user._id];
+                        console.log( "finding drill list:", workout_drills);
+                        console.log( "owner list:", owners);
+                        drills.find( {_id : { $in : workout_drills}, owner: { $nin : owners} } )
+                                .toArray()
+                        .then( function( unowned_drills){
+                            console.log( "found unowned drills:", unowned_drills);
+                            drill_list = drill_list.concat( unowned_drills);
+                            if( ndx === arr.length - 1) resolve( drill_list);
+                        });
+                    } else {
+                        console.log( "workout has not drills");
+                        if( ndx === arr.length - 1) resolve( drill_list);
+                    }
+                });
+            });
+            promises.push( np);
+        	Promise.all( promises).then( function( results){
+                console.log( "@Workout.findAll results:", workout_list);
+                res.status(200).send( [ { workout_list: workout_list, drill_list:results}]);
+            });
         }
     });
 };
