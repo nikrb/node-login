@@ -168,23 +168,30 @@ exports.findAll = function( req, res){
 exports.saveAll = function( req, res){
     // routines are mutabl
     var user_id = req.session.user._id;
-    console.log( "@Routine.saveAll owner [%s] body:", user_id, req.body);
+    console.log( "@Routine.saveAll for owner:", user_id);
     var routine_list = req.body;
     var promises = [];
-    for( var i =0; i<routine_list.length; i++){
+    routine_list.forEach( function( routine, ndx, routine_arr){
         var p = new Promise( function( resolve, reject){
-            var routine = routine_list[i];
             if( routine.mid.length){
                 // creator won't send any routines here as sync only updates
                 // state so doesn't need saving
                 // target player can change state from retrieved to complete
                 // without sync, so catch that here and not the (new) pratice mid
-                console.log( "update routine mid[%s] with practice mid[%s]", routine.mid, routine.practice_mid);
+                console.log( "update routine mid[%s] state[%s] with practice mid[%s]", 
+                                routine.mid, routine.state, routine.practice_mid);
+                if( typeof routine.practice_mid === "undefined"){
+                    routine.practice_mid = "";
+                }
                 routines.findOneAndUpdate( { _id : ObjectId(routine.mid) }, 
-                    { $set : { practice_mid : routine.practice_mid, workout_mid : routine.workout_mid }},
-                    { projection : { ios_id : 1, _id : 1}})
+                    { $set : { practice_mid : routine.practice_mid, 
+                                workout_mid : routine.workout_mid,
+                                state : routine.state }},
+                    { projection : { _id : 1, ios_id : 1}})
                 .then( function( upd){
-                    resolve( { ios_id : upd.ios_id, _id:upd.mid});
+                    console.log( "routine updated:", upd.value);
+                    resolve( { ios_id : routine.ios_id, 
+                                _id : routine.mid});
                 });
             } else {
                 console.log( "insert routine without mid");
@@ -201,7 +208,7 @@ exports.saveAll = function( req, res){
             }
         });
         promises.push( p);
-    }
+    });
 	Promise.all( promises).then( function( results){
 	    console.log( "@Routine.saveAll results:", results);
 	    res.status(200).send( results);
