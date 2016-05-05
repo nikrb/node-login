@@ -11,7 +11,7 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.findAll = function( req, res){
-    console.log( "player.FindAll for owner:", req.session.user._id);
+    console.log( "@player.FindAll for user:", req.session.user._id);
     players.find( {"owner" : req.session.user._id}).toArray( function(err, items){
         if( err){
             console.log( "fetch players failed:", err);
@@ -24,7 +24,7 @@ exports.findAll = function( req, res){
 
 exports.saveAll = function( req, res){
     var user_id = req.session.user._id;
-    console.log( "player.saveAll for owner:", user_id);
+    console.log( "@player.saveAll for owner:", user_id);
     var player_list = req.body.map( function( obj){
         obj.owner = user_id;
         return obj;

@@ -15,8 +15,9 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.findAll = function( req, res){
-    console.log( "@workout.findAll for user:", req.session.user._id);
-    workouts.find( { owner : req.session.user._id}).toArray( function( err, workout_list){
+    var user_id = req.session.user._id;
+    console.log( "@workout.findAll for user:", user_id);
+    workouts.find( { owner : user_id }).toArray( function( err, workout_list){
         console.log( "found workout count:", workout_list.length);
         if( err || workout_list.length === 0){
             if( err){
@@ -66,10 +67,7 @@ exports.findAll = function( req, res){
 exports.saveAll = function( req, res){
     var user_id = req.session.user._id;
     console.log( "Workout.saveAll owner:", user_id);
-    var workout_list = req.body.map( function( obj){
-        obj.owner = user_id;
-        return obj;
-    });
+    var workout_list = req.body;
     var promises = [];
     for( var i =0; i<workout_list.length; i++){
         var p = new Promise( function( resolve, reject){

@@ -18,11 +18,11 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.retrieveRoutinesForTarget = function( req, res){
-    console.log( "@retrieveRoutinesForTarget :", req.body);
     var user_id = req.session.user._id;
+    console.log( "@sync.retrieveRoutinesForTarget user:", user_id);
     
     var rp = new Promise( function( resolve, reject){
-        routines.find( {owner : ObjectId( user_id), state:"requested"}).toArray()
+        routines.find( {owner : user_id, state:"requested"}).toArray()
         .then( function( routines_list){
             if( routines_list.length > 0){
                 routines_list.forEach( function( routine, ndx, arr){
@@ -89,13 +89,12 @@ exports.sendCompletedRoutines = function( req, res){
 exports.createRoutinesForTargets = function( req, res){
     console.log( "@sync.createRoutinesForTargets user:", req.session.user._id);
     // var user_id = req.session.user._id;
-    var data = {};
-    var body = req.body[0];
+    var routine_list = req.body[0]["routines"];
     var promises = [];
-    for( var i=0; i<body["routines"].length; i++){
+    for( var i=0; i<routine_list.length; i++){
         // this is a compound promise so wrap in a bespoke promise to get it working
         var acc = new Promise( function( resolve, reject){
-            var routine = body["routines"][i];
+            var routine = routine_list[i];
             console.log( "@sync.createRoutinesForTargets routine:", routine);
             accounts.find( {email:routine.target} ).toArray().then( function(results){
                 if( results.length == 0){
@@ -104,27 +103,47 @@ exports.createRoutinesForTargets = function( req, res){
                                                 error : "target player not registered"});
                 } else {
                     var target_user = results[0];
-                    routine.owner = target_user._id;
-                    routine.state = "requested";
-                    routines.insertOne( routine).then( function( results){
-                        if( results.insertedCount == 0){
-                            console.log( "@sync.doit routine insert one failed:", routine.target);
-                            resolve( { ios_id : obj.ios_id,
-                                                        target : routine.target,
-                                                        error : "insert failed"});
-                        } else {
-                            var obj = results.ops[0];
-                            var newrou = { ios_id : obj.ios_id, mid : obj._id.toHexString()};
-                            resolve( newrou);
-                        }
-                    });
+                    if( routine.mid){
+                        var target_mid = target_user._id.toHexString();
+                        console.log( "updateing sync routine with mid, target:", target_mid);
+                        routines.findOneAndUpdate( { _id : ObjectId( routine.mid)},
+                                { $set : { owner : target_mid, state: "requested"}},
+                                { projection: { ios_id:1, _id:1}, 
+                                        returnOriginal:false, 
+                                        upsert:false}, 
+                            function( err, result){
+                                if( err){
+                                    resolve( { error:true, message:err});
+                                } else {
+                                    resolve( result.value);
+                                }
+                            }
+                        );
+                    } else {
+                        console.log( "creating sync routine without mid");
+                        routine.owner = target_user._id.toHexString();
+                        routine.state = "requested";
+                        routines.insertOne( routine).then( function( results){
+                            if( results.insertedCount == 0){
+                                console.log( "@sync.doit routine insert one failed:", routine.target);
+                                resolve( { ios_id : obj.ios_id,
+                                                            target : routine.target,
+                                                            error : "insert failed"});
+                            } else {
+                                var obj = results.ops[0];
+                                var newrou = { ios_id : obj.ios_id, _id : obj._id.toHexString()};
+                                resolve( newrou);
+                            }
+                        });
+                    }
                 }
             });
         });
         promises.push( acc);
     }
     Promise.all( promises).then( function( results){
-         data["routines"] = [];
+        var data = {};
+        data["routines"] = [];
         for( var i=0; i< results.length; i++){
             if( typeof results[i] !== "undefined"){
                 data["routines"].push( results[i]);
@@ -169,7 +188,7 @@ exports.getCompletedRoutines = function( req, res){
         });
     }).then( function( results){
         // TODO: bulk update on routines - hmmm, can we delete them?
-        console.log( "completed routine list:", results);
+        console.log( "@sync.getCompletedRoutines completed routine list:", results);
         res.status(200).send( results);
     });
 };

@@ -13,7 +13,9 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.findAll = function( req, res){
-    outcomes.find( {"owner": req.session.user._id}).toArray( function(err, items){
+    var user_id = req.session.user._id;
+    console.log( "@outcome.findAll user:", user_id);
+    outcomes.find( {"owner": user_id}).toArray( function(err, items){
         if( err){
             console.log( "@Outcome.findAll failed:", err);
             res.status(400).send( err);
