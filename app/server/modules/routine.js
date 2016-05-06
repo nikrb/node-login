@@ -51,8 +51,8 @@ function findWorkoutByMidWithDrills( wmid, owner){
                 reject( err);
             } else {
                 var workout = workout_one[0];
-                var wd = workout.hasDrills.split(",");
-                var workout_drills = wd.map( function( id){
+                var workout_drills = workout.hasDrills.split(",")
+                .map( function( id){
                     console.log( "drill id:", id);
                     return ObjectId( id);
                 });
