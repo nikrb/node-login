@@ -2,6 +2,7 @@ var mongodb = require('mongodb');
 var MongoClient = mongodb.MongoClient;
 var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
+var workoutp = require( './workoutp');
 var routines;
 var workouts;
 var drills;
@@ -35,44 +36,13 @@ exports.findAllWorkoutTest = function( req, res){
         } else {
             var routine = dox[0];
             console.log( "routine workout mid:", routine.workout_mid);
-            findWorkoutByMidWithDrills( routine.workout_mid).then( function( results){
+            workoutp.findWorkoutByMidWithDrills( routine.workout_mid).then( function( results){
                 routine.workout = results;
                 res.send( routine);
             });
         }
     });
 };
-
-function findWorkoutByMidWithDrills( wmid, owner){
-    return new Promise( function( resolve, reject){
-        workouts.find( { _id : ObjectId( wmid)})
-        .toArray( function( err, workout_one){
-            if( err){
-                reject( err);
-            } else {
-                var workout = workout_one[0];
-                var workout_drills = workout.hasDrills.split(",")
-                .map( function( id){
-                    console.log( "drill id:", id);
-                    return ObjectId( id);
-                });
-                var owners = [ "system", owner];
-                console.log( "finding drill list:", workout_drills);
-                console.log( "owner list:", owners);
-                drills.find( {_id : { $in : workout_drills} , owner: { $nin : owners} } )
-                .toArray( function( err, unowned_drills){
-                    if( err){
-                        console.log( "@@routine.findWorkoutByMidWithDrills failed:", err);
-                    } else {
-                        workout.drill_list = unowned_drills;
-                    }
-                    console.log( "resolve with workout:", workout);
-                    resolve( workout);
-                });
-            }
-        });
-    });
-}
 
 function findPracticeByMidWithOutcomes( practice_mid){
     return new Promise( function( resolve, reject){
@@ -147,7 +117,7 @@ exports.findAll = function( req, res){
                                 }
                             }
                         } else {
-                            findWorkoutByMidWithDrills( routine.workout_mid, user_id)
+                            workoutp.findWorkoutByMidWithDrills( routine.workout_mid, user_id)
                             .then( function( found_workout){
                                 routine.workout = found_workout;
                                 if( ndx === results_arr.length -1){
