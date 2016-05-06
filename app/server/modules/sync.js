@@ -35,12 +35,18 @@ exports.retrieveRoutinesForTarget = function( req, res){
                     workouts.find( { _id : ObjectId( routine.workout_mid)}).next( function( e, workout){
                         routine.workout = workout;
                         if( workout.hasDrills.length > 0){
-                            var drill_ids = workout.hasDrills.split( ",");
-                            drills.find( { owner : { $ne : "system"},
-                                            _id : {$in : drill_ids}
-                                        }).toArray( function( e, drill_list){
+                            var drill_ids = workout.hasDrills.split( ",")
+                                .map( function( ele){
+                                    return ObjectId( ele);
+                                });
+                            console.log( "finding unowned drills with ids:", drill_ids);
+                            var exclude_owners = [ "system", user_id];
+                            drills.find( { owner : { $ne : exclude_owners},
+                                            _id : {$in : drill_ids}})
+                                .toArray( function( e, drill_list){
+                                console.log( "found unowned drill count:", drill_list.length);
                                 if( drill_list.length > 0){
-                                    routine.drills = drill_list;
+                                    routine.unowned_drills = drill_list;
                                 }
                                 if( ndx === arr.length-1) resolve( routines_list);
                             });
