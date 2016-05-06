@@ -61,7 +61,11 @@ function findWorkoutByMidWithDrills( wmid, owner){
                 console.log( "owner list:", owners);
                 drills.find( {_id : { $in : workout_drills} , owner: { $nin : owners} } )
                 .toArray( function( err, unowned_drills){
-                    workout.drill_list = unowned_drills;
+                    if( err){
+                        console.log( "@@routine.findWorkoutByMidWithDrills failed:", err);
+                    } else {
+                        workout.drill_list = unowned_drills;
+                    }
                     console.log( "resolve with workout:", workout);
                     resolve( workout);
                 });
