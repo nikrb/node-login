@@ -1,8 +1,26 @@
+// TODO: this isn't ideal I suspect
+var mongodb = require('mongodb');
+var MongoClient = mongodb.MongoClient;
+var ObjectId = mongodb.ObjectID;
+var assert = require('assert');
+var workouts;
+var drills;
 
-exports.findWorkoutByMidWithDrills = function( wmid, owner){
+var url = 'mongodb://localhost:27017/node-login';
+MongoClient.connect(url, function(err, db) {
+    assert.equal(null, err);
+    console.log("WorkoutP Connected.");
+    
+    workouts = db.collection( 'workouts');
+    drills = db.collection( 'drills');
+});
+
+exports.findWorkoutByMidWithDrills = function( workout_mid, owner){
     return new Promise( function( resolve, reject){
-        workouts.find( { _id : ObjectId( wmid)})
+        console.log( "inside promise");
+        workouts.find( { _id : ObjectId( workout_mid)})
         .toArray( function( err, workout_one){
+            console.log( "found workouts:", workout_one);
             if( err){
                 reject( err);
             } else {
