@@ -2,7 +2,8 @@ var mongodb = require('mongodb');
 var MongoClient = mongodb.MongoClient;
 var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
-var practices;
+var workoutp = require( './workoutp');
+var practices, workouts, drills;
 
 var url = 'mongodb://localhost:27017/node-login';
 MongoClient.connect(url, function(err, db) {
@@ -10,18 +11,37 @@ MongoClient.connect(url, function(err, db) {
     console.log("Practice onnected.");
     
     practices = db.collection( 'practices');
+    workouts = db.collection( 'workouts');
+    drills = db.collection( 'drills');
 });
 
 exports.findAll = function( req, res){
     var user_id = req.session.user._id;
+    // var user_id = "56e4e3a466336cc80876aa48"; // "56e79125168800421b87e5d7";
     console.log( "@practice.findAll user:", user_id);
-    practices.find( {"owner": user_id}).toArray( function(err, items){
+    practices.find( {"owner": user_id}).toArray( function(err, practice_list){
         if( err){
             console.log( "@Practice.findAll failed:", err);
             res.status(400).send( err);
+        } else if( practice_list.length) {
+            // we need to return any unowned workouts/drills
+            var promises = [];
+            practice_list.forEach( function( practice, ndx, practice_arr){
+                var p = new Promise( function( resolve, reject){
+                    workoutp.findWorkoutByMidWithDrills( practice.workout_mid, user_id)
+                    .then( function( workout){
+                        practice.workout_data = workout;
+                        resolve( practice);
+                    });
+                });
+                promises.push( p);
+            });
+            Promise.all( promises).then( function( results){
+                console.log( "@practice.findAll results:", results);
+                res.send( practice_list);
+            });
         } else {
-            console.log( "@Practice.findAll results", items);
-            res.send( items);
+            res.send( [{ error:true, message:"not found"}]);
         }
     });
 };

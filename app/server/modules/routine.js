@@ -3,6 +3,7 @@ var MongoClient = mongodb.MongoClient;
 var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
 var workoutp = require( './workoutp');
+var practicep = require( './practicep');
 var routines;
 var workouts;
 var drills;
@@ -20,46 +21,6 @@ MongoClient.connect(url, function(err, db) {
     practices = db.collection( 'practices');
     outcomes = db.collection( 'outcomes');
 });
-
-exports.findAllPracticeTest = function( req, res){
-    findPracticeByMidWithOutcomes( "5728d1f45e37766a22049078")
-    .then( function( results){
-        res.send( results);
-    });
-};
-
-exports.findAllWorkoutTest = function( req, res){
-    var user_id = "56e79125168800421b87e5d7";
-    routines.find( { owner : user_id}).toArray( function( err, dox){
-        if( err){
-            res.status(400).send( { error : err});
-        } else {
-            var routine = dox[0];
-            console.log( "routine workout mid:", routine.workout_mid);
-            workoutp.findWorkoutByMidWithDrills( routine.workout_mid).then( function( results){
-                routine.workout = results;
-                res.send( routine);
-            });
-        }
-    });
-};
-
-function findPracticeByMidWithOutcomes( practice_mid){
-    return new Promise( function( resolve, reject){
-        practices.find( { _id : ObjectId( practice_mid)}).limit(1).next()
-        .then( function( practice){
-            var ids = practice.outcome_mids.split(",");
-            var idarr = ids.map( function( ele){
-                return ObjectId( ele);
-            });
-            outcomes.find( { _id : { $in : idarr }}).toArray()
-            .then( function( outcome_list){
-                practice.outcome_list = outcome_list;
-                resolve( practice);
-            })
-        });
-    });
-}
 
 exports.findAll = function( req, res){
     var user_id = req.session.user._id;
@@ -104,7 +65,7 @@ exports.findAll = function( req, res){
                             // set above
                             if( routine.practice_data){
                                 // fetch practice/outcome
-                                findPracticeByMidWithOutcomes( routine.practice_mid)
+                                practicep.findPracticeByMidWithOutcomes( routine.practice_mid)
                                 .then( function( practice_data){
                                     routine.practice_data = practice_data;
                                     if( ndx === results_arr.length -1){
