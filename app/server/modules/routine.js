@@ -35,15 +35,18 @@ exports.findAll = function( req, res){
             res.status(200).send( [{ error:true, message:"not found"}]);
         } else {
             // always return routine to creator on load
-            // if not creator, only return if owner has control
+            // but don't return the practice data unless state closed
+            // sync sets state from returned to closed and we don't
+            // want coach seeing results before performing a sync.
+            // if not creator, only return if target player has control
             // this boils down to states retrieved and complete.
             // states: created,requested,retrieved,complete,returned,closed
-            // state requested means target hasn't retrived it yet, so don't return on load
+            // state requested means target hasn't retrieved it yet, so don't return on load
             // state returned means target has passed routine back to coach, and is deleted
             // from target device so don't load.
             var results = routine_list.filter( function( routine){
                 if( routine.creator_mid === user_id){
-                    if( routine.state === "returned" || routine.state === "closed"){
+                    if( routine.state === "closed"){
                         routine.practice_data = true;
                     }
                     return true;
@@ -80,7 +83,7 @@ exports.findAll = function( req, res){
                         } else {
                             workoutp.findWorkoutByMidWithDrills( routine.workout_mid, user_id)
                             .then( function( found_workout){
-                                routine.workout = found_workout;
+                                routine.workout_data = found_workout;
                                 if( ndx === results_arr.length -1){
                                     resolve( results_arr);
                                 }
