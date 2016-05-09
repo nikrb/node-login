@@ -24,13 +24,13 @@ MongoClient.connect(url, function(err, db) {
 
 exports.findAll = function( req, res){
     var user_id = req.session.user._id;
-    // var user_id = "56e79125168800421b87e5d7";
+    // var user_id = "56e4e3a466336cc80876aa48";
     console.log( "@routine.findAll user:", user_id);
-    routines.find( { $or : [ {owner : user_id}, { creator_mid : user_id}]}).toArray( function( err, routine_list){
+    routines.find( { $or : [ {owner : user_id}, { creator_mid : user_id}]}).toArray( function( err, found_routines){
         if( err){
             console.log( "@Routine.findAll failed:", err);
             res.status(400).send( [{ error:true, message:err}]);
-        } else if( routine_list.length === 0){
+        } else if( found_routines.length === 0){
             console.log( "@Routine.findAll not found");
             res.status(200).send( [{ error:true, message:"not found"}]);
         } else {
@@ -44,7 +44,7 @@ exports.findAll = function( req, res){
             // state requested means target hasn't retrieved it yet, so don't return on load
             // state returned means target has passed routine back to coach, and is deleted
             // from target device so don't load.
-            var results = routine_list.filter( function( routine){
+            var results = found_routines.filter( function( routine){
                 if( routine.creator_mid === user_id){
                     if( routine.state === "closed"){
                         routine.practice_data = true;
@@ -52,6 +52,7 @@ exports.findAll = function( req, res){
                     return true;
                 } else {
                     // for target player, we (should) already have the practice data
+                    // TODO: if state is retrieved, there are no practices?!
                     if( routine.state === "retrieved" || routine.state === "complete"){
                         return true;
                     }
@@ -60,43 +61,43 @@ exports.findAll = function( req, res){
             });
             console.log( "filtered routine list count:", results.length);
             if( results.length > 0){
-                var p = new Promise( function( resolve, reject){
-                    results.forEach( function( routine, ndx, results_arr){
-                        // we don't need the workout if we created it
-                        if( routine.creator_mid === routine.owner){
-                            // but we need target player pactice data depending on state
-                            // set above
-                            if( routine.practice_data){
-                                // fetch practice/outcome
+                var promises = [];
+                results.forEach( function( routine, ndx, results_arr){
+                    // we don't need the workout if we created it
+                    console.log( "deal with routine:", routine);
+                    if( routine.creator_mid === user_id){
+                        // but we need target player pactice data depending on state
+                        // set above
+                        console.log( "routine creator query practice data:");
+                        if( routine.practice_data){
+                            // fetch practice/outcome
+                            var p = new Promise( function( resolve, reject){
                                 practicep.findPracticeByMidWithOutcomes( routine.practice_mid)
                                 .then( function( practice_data){
+                                    console.log( "got practice data:", practice_data);
                                     routine.practice_data = practice_data;
-                                    if( ndx === results_arr.length -1){
-                                        resolve( results_arr);
-                                    }
+                                    resolve( true);
                                 });
-                            } else {
-                                if( ndx === results_arr.length -1){
-                                    resolve( results_arr);
-                                }
-                            }
-                        } else {
+                            });
+                            promises.push( p);
+                        }
+                    } else {
+                        var wp = new Promise( function( resolve, reject){
                             workoutp.findWorkoutByMidWithDrills( routine.workout_mid, user_id)
                             .then( function( found_workout){
                                 routine.workout_data = found_workout;
-                                if( ndx === results_arr.length -1){
-                                    resolve( results_arr);
-                                }
+                                resolve( true);
                             });
-                        }
-                    });
+                        });
+                        promises.push( wp);
+                    }
                 });
-                p.then( function( results){
-                    console.log( "@Routine.findAll results:", results);
-                    res.status(200).send( results);
+                Promise.all( promises).then( function( rubbish){
+                    console.log( "@Routine.findAll results:", found_routines);
+                    res.status(200).send( found_routines);
                 });
             } else {
-                console.log( "no routines to return");
+                console.log( "@routine.findAll not found");
                 res.status(200).send( [{ error:true, message:"not found"}]);
             }
         }

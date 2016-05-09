@@ -31,16 +31,17 @@ exports.findAll = function( req, res){
                     workoutp.findWorkoutByMidWithDrills( practice.workout_mid, user_id)
                     .then( function( workout){
                         practice.workout_data = workout;
-                        resolve( practice);
+                        resolve( true);
                     });
                 });
                 promises.push( p);
             });
-            Promise.all( promises).then( function( results){
-                console.log( "@practice.findAll results:", results);
+            Promise.all( promises).then( function( rubbish){
+                console.log( "@practice.findAll results:", practice_list);
                 res.send( practice_list);
             });
         } else {
+            console.log( "@practice.findAll not found");
             res.send( [{ error:true, message:"not found"}]);
         }
     });
