@@ -38,7 +38,7 @@ exports.findWorkoutByMidWithDrills = function( workout_mid, owner){
                     if( err){
                         console.log( "@@routine.findWorkoutByMidWithDrills failed:", err);
                     } else {
-                        workout.drill_list = unowned_drills;
+                        workout.drill_data = unowned_drills;
                     }
                     console.log( "resolve with workout:", workout);
                     resolve( workout);
