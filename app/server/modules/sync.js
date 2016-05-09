@@ -222,7 +222,8 @@ exports.getCompletedRoutines = function( req, res){
                 res.status(200).send( routine_list);
             });
         } else {
-            res.send( [{ error : true, message:"not found"}]);
+            console.log( "@sync.getCompletedRoutines not found");
+            res.send( []);
         }
     });
 };
