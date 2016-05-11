@@ -47,3 +47,16 @@ exports.saveAll = function( req, res){
         }
     });
 };
+
+exports.purge = function( game_mid_list){
+    var mids = game_mid_list.map( function( ele){
+        return ObjectId( ele);
+    });
+    games.deleteMany( { _id : { $in : mids}}, {}, function( err, results){
+        if( err){
+            console.log( "@game.purge failed:", err);
+        } else {
+            console.log( "@game.purge count:", results.deletedCount);
+        }
+    });
+};

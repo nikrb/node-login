@@ -1,4 +1,6 @@
-var MongoClient = require('mongodb').MongoClient;
+var mongodb = require('mongodb');
+var MongoClient = mongodb.MongoClient;
+var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
 var shots;
 
@@ -44,3 +46,17 @@ exports.saveAll = function( req, res){
         }
     });
 };
+
+exports.purge = function( shot_mid_list){
+    var mids = shot_mid_list.map( function( ele){
+        return ObjectId( ele);
+    });
+    shots.deleteMany( { _id : { $in : mids}}, {}, function( err, results){
+        if( err){
+            console.log( "@shot.purge failed:", err);
+        } else {
+            console.log( "@shot.purge count:", results.deletedCount);
+        }
+    });
+};
+

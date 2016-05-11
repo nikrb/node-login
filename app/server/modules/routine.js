@@ -154,3 +154,17 @@ exports.saveAll = function( req, res){
 	});
 
 };
+
+exports.purge = function( routine_mid_list){
+    var mids = routine_mid_list.map( function( ele){
+        return ObjectId( ele);
+    });
+    routines.deleteMany( { _id : { $in : mids}}, {}, function( err, results){
+        if( err){
+            console.log( "@routine.purge failed:", err);
+        } else {
+            console.log( "@routine.purge count:", results.deletedCount);
+        }
+    });
+};
+

@@ -103,3 +103,18 @@ exports.saveAll = function( req, res){
 	    res.status(200).send( results);
 	});
 };
+
+
+exports.purge = function( workout_mid_list){
+    var mids = workout_mid_list.map( function( ele){
+        return ObjectId( ele);
+    });
+    workouts.deleteMany( { _id : { $in : mids}}, {}, function( err, results){
+        if( err){
+            console.log( "@workout.purge failed:", err);
+        } else {
+            console.log( "@workout.purge count:", results.deletedCount);
+        }
+    });
+};
+

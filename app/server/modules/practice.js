@@ -68,3 +68,17 @@ exports.saveAll = function( req, res){
         }
     });
 };
+
+exports.purge = function( practice_mid_list){
+    var mids = practice_mid_list.map( function( ele){
+        return ObjectId( ele);
+    });
+    practices.deleteMany( { _id : { $in : mids}}, {}, function( err, results){
+        if( err){
+            console.log( "@practice.purge failed:", err);
+        } else {
+            console.log( "@practice.purge count:", results.deletedCount);
+        }
+    });
+};
+

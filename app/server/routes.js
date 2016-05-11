@@ -88,6 +88,30 @@ module.exports = function(app) {
 		routine.saveAll( req, res);
 	});
 	
+	app.post( '/purge', function( req, res){
+		var user_id = req.session.user._id;
+		console.log( "@routes.purge for user:", user_id);
+		if( typeof req.body["games"] !== "undefined"){
+			game.purge( req.body["games"]);
+		}
+		if( typeof req.body["shots"] !== "undefined"){
+			shot.purge( req.body["shots"]);
+		}
+		if( typeof req.body["workouts"] !== "undefined"){
+			workout.purge( req.body["workouts"]);
+		}
+		if( typeof req.body["routines"] !== "undefined"){
+			routine.purge( req.body["routines"]);
+		}
+		if( typeof req.body["practices"] !== "undefined"){
+			practice.purge( req.body["practices"]);
+		}
+		if( typeof req.body["outcomes"] !== "undefined"){
+			outcome.purge( req.body["outcomes"]);
+		}
+		res.send( [{ ok : true}]);
+	});
+	
 	
 	app.get( "/manual", function( req, res){
 		switch( req.query.page){

@@ -47,3 +47,17 @@ exports.saveAll = function( req, res){
         }
     });
 };
+
+exports.purge = function( outcome_mid_list){
+    var mids = outcome_mid_list.map( function( ele){
+        return ObjectId( ele);
+    });
+    outcomes.deleteMany( { _id : { $in : mids}}, {}, function( err, results){
+        if( err){
+            console.log( "@outcome.purge failed:", err);
+        } else {
+            console.log( "@outcome.purge count:", results.deletedCount);
+        }
+    });
+};
+
