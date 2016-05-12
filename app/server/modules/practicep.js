@@ -14,18 +14,26 @@ MongoClient.connect(url, function(err, db) {
 });
 
 exports.findPracticeByMidWithOutcomes = function( practice_mid){
+    console.log( "finding practice with mid:", practice_mid);
     return new Promise( function( resolve, reject){
-        practices.find( { _id : ObjectId( practice_mid)}).limit(1).next()
-        .then( function( practice){
-            var ids = practice.outcome_mids.split(",");
-            var idarr = ids.map( function( ele){
-                return ObjectId( ele);
-            });
-            outcomes.find( { _id : { $in : idarr }}).toArray()
-            .then( function( outcome_list){
-                practice.outcome_list = outcome_list;
-                resolve( practice);
-            });
+        practices.find( { _id : ObjectId( practice_mid)}).toArray()
+        .then( function( practices){
+            if( practices.length > 0){
+                var practice = practices[0];
+                var ids = practice.outcome_mids.split(",");
+                var idarr = ids.map( function( ele){
+                    return ObjectId( ele);
+                });
+                console.log( "found practice, getting outcome mids:", practice.outcome_mids);
+                outcomes.find( { _id : { $in : idarr }}).toArray()
+                .then( function( outcome_list){
+                    practice.outcome_list = outcome_list;
+                    resolve( practice);
+                });
+            } else {
+                console.log( "@practice.findPracticeByMidWithOutcomes not found for practice mid:", practice_mid);
+                resolve( []);
+            }
         });
     });
 };
