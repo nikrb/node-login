@@ -41,30 +41,6 @@ exports.retrieveRoutinesForTarget = function( req, res){
                     });
                 });
                 promises.push( p);
-                /* FIXME: remove unused
-                workouts.find( { _id : ObjectId( routine.workout_mid)}).next( function( e, workout){
-                    routine.workout = workout;
-                    if( workout.hasDrills.length > 0){
-                        var drill_ids = workout.hasDrills.split( ",")
-                            .map( function( ele){
-                                return ObjectId( ele);
-                            });
-                        console.log( "finding unowned drills with ids:", drill_ids);
-                        var exclude_owners = [ "system", user_id];
-                        drills.find( { owner : { $ne : exclude_owners},
-                                        _id : {$in : drill_ids}})
-                            .toArray( function( e, drill_list){
-                            console.log( "found unowned drill count:", drill_list.length);
-                            if( drill_list.length > 0){
-                                routine.unowned_drills = drill_list;
-                            }
-                            if( ndx === arr.length-1) resolve( routines_list);
-                        });
-                    } else {
-                        if( ndx === arr.length-1) resolve( routines_list);
-                    }
-                });
-                */
             });
             Promise.all( promises).then( function( finished){
                 console.log( "@sync.retrieveRoutinesForTarget results:", routines_list);
@@ -72,7 +48,7 @@ exports.retrieveRoutinesForTarget = function( req, res){
             });
         } else {
             console.log( "@sync.retrieveRoutinesForTarget not found");
-            res.send( [{ error : true, message : "not found"}]);
+            res.send( []);
         }
     });
 };
