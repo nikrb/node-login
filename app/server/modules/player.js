@@ -1,4 +1,6 @@
-var MongoClient = require('mongodb').MongoClient;
+var mongodb = require('mongodb');
+var MongoClient = mongodb.MongoClient;
+var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
 var players;
 
@@ -25,24 +27,29 @@ exports.findAll = function( req, res){
 exports.saveAll = function( req, res){
     var user_id = req.session.user._id;
     console.log( "@player.saveAll for owner:", user_id);
-    var player_list = req.body.map( function( obj){
-        obj.owner = user_id;
-        return obj;
-    });
-    players.deleteMany( { owner : user_id}, null, function( err, results){
-        if( err){
-            console.log( "Player.saveAll delete failed:", err);
-            res.status(400).send( err);
-        } else {
-            players.insertMany( player_list, function( err, objs){
-                if( err){
-                    console.log( "player.saveAll insert failed:", err);
-                    res.status(400).send( err);
+    var promises = [];
+    req.body.forEach( function( player){
+        var p = new Promise( function( resolve, reject){
+            players.update( {_id: ObjectId( player.mid)},
+                        { $set : { name : player.name, 
+                                    email : player.email,
+                                    shirt_number : player.shirt_number,
+                                    owner : user_id
+                        }},
+                        { upsert : true}).then( function( result){
+                var ret = { ios_id : player.ios_id };
+                if( result.upsertedCount > 0){
+                    ret._id = result.upsertedId;
                 } else {
-                    res.status(200).send( objs.ops);
+                    ret._id = player.mid;
                 }
+                resolve( ret);
             });
-        }
+        });
+        promises.push( p);
     });
-    
+    Promise.all( promises).then( function( results){
+        console.log( "@player.saveAll results:", results);
+        res.send( results);
+    });
 };
