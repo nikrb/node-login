@@ -30,26 +30,40 @@ exports.saveAll = function( req, res){
     var promises = [];
     req.body.forEach( function( player){
         var p = new Promise( function( resolve, reject){
-            players.update( {_id: ObjectId( player.mid)},
-                        { $set : { name : player.name, 
-                                    email : player.email,
-                                    shirt_number : player.shirt_number,
-                                    owner : user_id
-                        }},
-                        { upsert : true}).then( function( result){
-                var ret = { ios_id : player.ios_id };
-                if( result.upsertedCount > 0){
-                    ret._id = result.upsertedId;
-                } else {
-                    ret._id = player.mid;
-                }
-                resolve( ret);
-            });
+            if( typeof player.mid === "undefined"){
+                players.insertOne( player).then( function( result){
+                    if( result.result.ok){
+                        resolve( { ios_id : player.ios_id, _id : result.ops[0]._id });
+                    } else {
+                        console.log( "@player.saveAll insertOne failed for:", player);
+                        reject();
+                    }
+                });
+            } else {
+                players.update( {_id: ObjectId( player.mid)},
+                            { $set : { name : player.name, 
+                                        email : player.email,
+                                        shirt_number : player.shirt_number,
+                                        owner : user_id
+                            }})
+                .then( function( result){
+                    resolve( { ios_id : player.ios_id, _id : player.mid });
+                });
+            }
         });
         promises.push( p);
     });
     Promise.all( promises).then( function( results){
         console.log( "@player.saveAll results:", results);
+        var keep_mids = results.map( function( obj){
+            return ObjectId( obj._id);
+        });
+        players.deleteMany( { owner : user_id, _id : { $nin : keep_mids}})
+        .then( function( result){
+            if( result.result.n > 0){
+                console.log( "@player.saveAll user [%s] deleted player count[%d]", user_id, result.result.n);
+            }
+        });
         res.send( results);
     });
 };
