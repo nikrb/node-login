@@ -52,8 +52,11 @@ exports.findAll = function( req, res){
                     return true;
                 } else {
                     // for target player, we (should) already have the practice data
+                    // change - we won't now have the practice data, we only get practices
+                    // that don't have their isForRoutine flag set to false in practice find
                     // TODO: if state is retrieved, there are no practices?!
                     if( routine.state === "retrieved" || routine.state === "complete"){
+                        routine.practice_data = true;
                         return true;
                     }
                 }
@@ -65,23 +68,7 @@ exports.findAll = function( req, res){
                 results.forEach( function( routine, ndx, results_arr){
                     // we don't need the workout if we created it
                     console.log( "deal with routine:", routine);
-                    if( routine.creator_mid === user_id){
-                        // but we need target player pactice data depending on state
-                        // set above
-                        console.log( "routine creator query practice data:");
-                        if( routine.practice_data){
-                            // fetch practice/outcome
-                            var p = new Promise( function( resolve, reject){
-                                practicep.findPracticeByMidWithOutcomes( routine.practice_mid)
-                                .then( function( practice_data){
-                                    console.log( "got practice data:", practice_data);
-                                    routine.practice_data = practice_data;
-                                    resolve( true);
-                                });
-                            });
-                            promises.push( p);
-                        }
-                    } else {
+                    if( routine.creator_mid !== user_id){
                         var wp = new Promise( function( resolve, reject){
                             workoutp.findWorkoutByMidWithDrills( routine.workout_mid, user_id)
                             .then( function( found_workout){
@@ -90,6 +77,19 @@ exports.findAll = function( req, res){
                             });
                         });
                         promises.push( wp);
+                    }
+                    
+                    if( routine.practice_data){
+                        // fetch practice/outcome
+                        var p = new Promise( function( resolve, reject){
+                            practicep.findPracticeByMidWithOutcomes( routine.practice_mid)
+                            .then( function( practice_data){
+                                console.log( "got practice data:", practice_data);
+                                routine.practice_data = practice_data;
+                                resolve( true);
+                            });
+                        });
+                        promises.push( p);
                     }
                 });
                 Promise.all( promises).then( function( rubbish){
