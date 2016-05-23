@@ -3,6 +3,7 @@ var MongoClient = mongodb.MongoClient;
 var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
 var workoutp = require('./workoutp');
+var outcomep = require( './outcomep');
 var routines, workouts, drills, accounts, practices, outcomes;
 
 var url = 'mongodb://localhost:27017/node-login';
@@ -174,6 +175,12 @@ exports.getCompletedRoutines = function( req, res){
                         } else {
                             console.log( "@sync.getCompletedRoutines found practice:", prac);
                             routine.practice = prac;
+                            outcomep.findByMidList( prac.outcome_mids)
+                            .then( function( outcomes){
+                                routine.practice.outcome_data = outcomes;
+                                resolve( true);
+                            });
+                            /*
                             var outcome_arr = prac.outcome_mids.split( ",");
                             var outcome_ids = outcome_arr.map( function( mid){
                                 return ObjectId( mid);
@@ -186,7 +193,7 @@ exports.getCompletedRoutines = function( req, res){
                                     routine.outcome_list = outcome_list;
                                 }
                                 resolve( 1);
-                            });
+                            });*/
                         }
                     });
                 });
