@@ -3,7 +3,7 @@ var MongoClient = mongodb.MongoClient;
 var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
 var workoutp = require( './workoutp');
-var outcomep = require( './outcome');
+var outcomep = require( './outcomep');
 var practices, workouts, drills;
 
 var url = 'mongodb://localhost:27017/node-login';
@@ -21,7 +21,7 @@ exports.findAll = function( req, res){
     // var user_id = "56e4e3a466336cc80876aa48"; // "56e79125168800421b87e5d7";
     console.log( "@practice.findAll user:", user_id);
     // we don't want practices for routines, we get those with routine
-    practices.find( { owner: user_id, isForRoutine : false }).toArray( function(err, practice_list){
+    practices.find( { owner: user_id, isForRoutine : "false" }).toArray( function(err, practice_list){
         if( err){
             console.log( "@Practice.findAll failed:", err);
             res.status(400).send( err);
