@@ -44,8 +44,13 @@ exports.findAll = function( req, res){
             // state requested means target hasn't retrieved it yet, so don't return on load
             // state returned means target has passed routine back to coach, and is deleted
             // from target device so don't load.
+            // 
+            // FIXME: tidy comments here
+            // we can now rely on the practice_mid to fetch practice data
             var results = found_routines.filter( function( routine){
                 if( routine.creator_mid === user_id){
+                    // don't return the practice data to the coach unless state is close
+                    // or sync won't be required and routine won't complete
                     if( routine.state === "closed"){
                         routine.practice_data = true;
                     }
@@ -54,8 +59,11 @@ exports.findAll = function( req, res){
                     // for target player, we (should) already have the practice data
                     // change - we won't now have the practice data, we only get practices
                     // that don't have their isForRoutine flag set to false in practice find
-                    // TODO: if state is retrieved, there are no practices?!
-                    if( routine.state === "retrieved" || routine.state === "complete"){
+                    // FIXME: if state is retrieved, there are no practices
+                    // if( routine.state === "retrieved" || routine.state === "complete"){
+                    if( routine.state == "retrieved"){
+                        return true;
+                    } else if( routine.state === "complete"){
                         routine.practice_data = true;
                         return true;
                     }
@@ -78,7 +86,7 @@ exports.findAll = function( req, res){
                         });
                         promises.push( wp);
                     }
-                    
+                    // if there is practice data fetch it
                     if( routine.practice_data && routine.practice_mid){
                         // fetch practice/outcome
                         var p = new Promise( function( resolve, reject){
