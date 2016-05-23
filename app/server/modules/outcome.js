@@ -12,20 +12,6 @@ MongoClient.connect(url, function(err, db) {
     outcomes = db.collection( 'outcomes');
 });
 
-exports.findByPracticeMid = function( outcome_mids){
-    return new Promise( function( resolve, reject){
-        var mids = outcome_mids.split(",");
-        var midarr = mids.map( function( ele){
-            return ObjectId( ele);
-        });
-        console.log( "getting outcome mids:", mids);
-        outcomes.find( { _id : { $in : midarr }}).toArray()
-        .then( function( outcome_list){
-            resolve( outcome_list);
-        });
-    });
-};
-
 exports.findAll = function( req, res){
     var user_id = req.session.user._id;
     console.log( "@outcome.findAll user:", user_id);
