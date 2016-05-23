@@ -79,7 +79,7 @@ exports.findAll = function( req, res){
                         promises.push( wp);
                     }
                     
-                    if( routine.practice_data){
+                    if( routine.practice_data && routine.practice_mid){
                         // fetch practice/outcome
                         var p = new Promise( function( resolve, reject){
                             practicep.findPracticeByMidWithOutcomes( routine.practice_mid)
