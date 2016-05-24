@@ -3,3 +3,4 @@ node_modules
 app/server/modules/email-settings-mine.js
 dbfns.js
 bakup/
+logs/

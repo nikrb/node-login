@@ -12,6 +12,16 @@ var bodyParser = require('body-parser');
 var errorHandler = require('errorhandler');
 var cookieParser = require('cookie-parser');
 var MongoStore = require('connect-mongo')(session);
+var log4js = require('log4js'); 
+//console log is loaded by default, so you won't normally need to do this
+//log4js.loadAppender('console');
+log4js.loadAppender('file');
+//log4js.addAppender(log4js.appenders.console());
+log4js.addAppender(log4js.appenders.file('logs/shoot.log'), 'shoot');
+
+var logger = log4js.getLogger('shoot');
+logger.setLevel('TRACE');
+
 
 function uniqid(a){
 	return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,uniqid);
@@ -42,5 +52,5 @@ require('./app/server/routes')(app);
 if (app.get('env') == 'development') app.use(errorHandler());
 
 http.createServer(app).listen(app.get('port'), function(){
-	console.log('Express server listening on port ' + app.get('port'));
+	logger.info('Express server listening on port ' + app.get('port'));
 });

@@ -4,6 +4,8 @@ var ObjectId = mongodb.ObjectID;
 var assert = require('assert');
 var workoutp = require( './workoutp');
 var practicep = require( './practicep');
+var log4js = require('log4js'); 
+var logger = log4js.getLogger('shoot');
 var routines;
 var workouts;
 var drills;
@@ -13,7 +15,7 @@ var outcomes;
 var url = 'mongodb://localhost:27017/node-login';
 MongoClient.connect(url, function(err, db) {
     assert.equal(null, err);
-    console.log("Routine Connected.");
+    logger.info("Routine Connected.");
     
     routines = db.collection( 'routines');
     workouts = db.collection( "workouts");
@@ -25,13 +27,13 @@ MongoClient.connect(url, function(err, db) {
 exports.findAll = function( req, res){
     var user_id = req.session.user._id;
     // var user_id = "56e4e3a466336cc80876aa48";
-    console.log( "@routine.findAll user:", user_id);
+    logger.info( "@routine.findAll user:", user_id);
     routines.find( { $or : [ {owner : user_id}, { creator_mid : user_id}]}).toArray( function( err, found_routines){
         if( err){
-            console.log( "@Routine.findAll failed:", err);
+            logger.error( "@Routine.findAll failed:", err);
             res.status(400).send( [{ error:true, message:err}]);
         } else if( found_routines.length === 0){
-            console.log( "@Routine.findAll not found");
+            logger.info( "@Routine.findAll not found");
             res.status(200).send( [{ error:true, message:"not found"}]);
         } else {
             // always return routine to creator on load
@@ -70,12 +72,12 @@ exports.findAll = function( req, res){
                 }
                 return false;
             });
-            console.log( "filtered routine list count:", results.length);
+            logger.trace( "filtered routine list count:", results.length);
             if( results.length > 0){
                 var promises = [];
                 results.forEach( function( routine, ndx, results_arr){
                     // we don't need the workout if we created it
-                    console.log( "deal with routine:", routine);
+                    logger.trace( "deal with routine:", routine);
                     if( routine.creator_mid !== user_id){
                         var wp = new Promise( function( resolve, reject){
                             workoutp.findWorkoutByMidWithDrills( routine.workout_mid, user_id)
@@ -92,7 +94,7 @@ exports.findAll = function( req, res){
                         var p = new Promise( function( resolve, reject){
                             practicep.findPracticeByMidWithOutcomes( routine.practice_mid)
                             .then( function( practice_data){
-                                console.log( "got practice data:", practice_data);
+                                logger.trace( "got practice data:", practice_data);
                                 routine.practice_data = practice_data;
                                 resolve( true);
                             });
@@ -101,11 +103,11 @@ exports.findAll = function( req, res){
                     }
                 });
                 Promise.all( promises).then( function( rubbish){
-                    console.log( "@Routine.findAll results:", found_routines);
+                    logger.info( "@Routine.findAll results:", found_routines);
                     res.status(200).send( found_routines);
                 });
             } else {
-                console.log( "@routine.findAll not found");
+                logger.warn( "@routine.findAll not found");
                 res.status(200).send( [{ error:true, message:"not found"}]);
             }
         }
