@@ -22,7 +22,7 @@ exports.findAll = function( req, res){
             logger.error( "@drill.findAll failed:", err);
             res.status(400).send( [{ error:true, message:err}]);
         } else {
-            logger.info( "@drill.findAll results:", items);
+            // logger.info( "@drill.findAll results:", items);
             res.send( items);
         }
     });

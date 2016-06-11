@@ -12,6 +12,9 @@ var practice = require( './modules/practice.js');
 var outcome = require( './modules/outcome.js');
 var routine = require( './modules/routine.js');
 
+var log4js = require('log4js'); 
+var logger = log4js.getLogger('shoot');
+
 module.exports = function(app) {
 	
 	app.get( '/drills', function(req, res) {
@@ -90,7 +93,7 @@ module.exports = function(app) {
 	
 	app.post( '/purge', function( req, res){
 		var user_id = req.session.user._id;
-		console.log( "@routes.purge for user:", user_id);
+		logger.trace( "@routes.purge for user:", user_id);
 		if( typeof req.body["games"] !== "undefined"){
 			game.purge( req.body["games"]);
 		}
@@ -135,6 +138,7 @@ module.exports = function(app) {
 		// check if the user's credentials are saved in a cookie //
 		if (req.cookies.user == undefined || req.cookies.pass == undefined){
 			// res.render('login', { title: 'Hello - Please Login To Your Account' });
+			logger.error( "login req.cookies or pass is undefined");
 			res.send( [{login:false}]);
 		}	else{
 		// attempt automatic login //
@@ -143,9 +147,10 @@ module.exports = function(app) {
 				    req.session.user = o;
 					// res.redirect('/home');
 					res.send( [{login:true, user:o.user, email:o.email, mid:o._id.toHexString()}]);
-					console.log( "auto login success for [%s]", o.user);
+					logger.info( "auto login success for [%s]", o.user);
 				}	else{
 					// res.render('login', { title: 'Hello - Please Login To Your Account' });
+					logger.warn( "auto login failed for [%s]", req.cookies.user);
 					res.send( [{login:false}]);
 				}
 			});
@@ -155,7 +160,7 @@ module.exports = function(app) {
 	app.post('/gollum', function(req, res){
 		AM.manualLogin(req.body['user'], req.body['pass'], function(e, o){
 			if (!o){
-				console.log( "login failed for [%s]", req.body['user']);
+				logger.warn( "login failed for [%s]", req.body['user']);
 				res.status(400).send(e);
 			}	else{
 				req.session.user = o;
@@ -163,7 +168,7 @@ module.exports = function(app) {
 					res.cookie('user', o.user, { maxAge: 900000 });
 					res.cookie('pass', o.pass, { maxAge: 900000 });
 				}
-				console.log( "login post request success for [%s]", o.user);
+				logger.trace( "login post request success for [%s]", o.user);
 				res.status(200).send( [{login:true, user:o.user, email:o.email, mid:o._id.toHexString()}]);
 			}
 		});
@@ -171,7 +176,7 @@ module.exports = function(app) {
 	
 
 	app.post('/gollumout', function(req, res){
-		console.log( "post /logout:");
+		logger.trace( "post /logout:");
 		res.clearCookie('user');
 		res.clearCookie('pass');
 		req.session.destroy(function(e){ res.status(200).send( [{logout:true}]); });
@@ -188,10 +193,10 @@ module.exports = function(app) {
 			// country : req.body['country']
 		}, function(e){
 			if (e){
-				console.log( "signup failed for email:", req.body['email']);
+				logger.warn( "signup failed for email:", req.body['email']);
 				res.status(400).send( e);
 			}	else{
-				console.log( "signup success for email:", req.body['email']);
+				logger.trace( "signup success for email:", req.body['email']);
 				res.status(200).send( [{signup:true}]);
 			}
 		});
@@ -233,7 +238,7 @@ module.exports = function(app) {
 	});
 
 	app.post('/logout', function(req, res){
-		console.log( "post /logout:");
+		logger.trace( "post /logout:");
 		res.clearCookie('user');
 		res.clearCookie('pass');
 		req.session.destroy(function(e){ res.status(200).send('ok'); });
@@ -310,11 +315,12 @@ module.exports = function(app) {
 					if (!e){
 						res.status(200).send('ok');
 					}	else{
-						for( var k in e) console.log('ERROR : ', k, e[k]);
+						for( var k in e) logger.warn('ERROR : ', k, e[k]);
 						res.status(400).send('unable to dispatch password reset');
 					}
 				});
 			} else {
+				logger.warn( "lost password failed for email:", req.body['email']);
 				res.status(400).send('email-not-found');
 			}
 		});
@@ -325,8 +331,10 @@ module.exports = function(app) {
 		var passH = req.query["p"];
 		AM.validateResetLink(email, passH, function(e){
 			if (e != 'ok'){
+				logger.warn( "reset password failed for email:", email);
 				res.redirect('/');
 			} else{
+				logger.trace( "reset password save password:", email);
 				// save the user's email in a session instead of sending to the client //
 				req.session.reset = { email:email, passHash:passH };
 				res.render('reset', { title : 'Reset Password' });
@@ -342,8 +350,10 @@ module.exports = function(app) {
 		req.session.destroy();
 		AM.updatePassword(email, nPass, function(e, o){
 			if (o){
+				logger.trace( "reset password ok for email:", email);
 				res.status(200).send('ok');
 			}	else{
+				logger.warn( "reset password failed for email:", email);
 				res.status(400).send('unable to update password');
 			}
 		});
@@ -358,10 +368,12 @@ module.exports = function(app) {
 	app.post('/delete', function(req, res){
 		AM.deleteAccount(req.body.id, function(e, obj){
 			if (!e){
+				logger.warn( "account delete failed for id:", req.body.id);
 				res.clearCookie('user');
 				res.clearCookie('pass');
 				req.session.destroy(function(e){ res.status(200).send('ok'); });
 			}	else{
+				logger.info( "account delete not found for id:", req.body.id);
 				res.status(400).send('record not found');
 			}
 	    });
@@ -379,6 +391,7 @@ module.exports = function(app) {
 	});
 	
 	app.get('*', function(req, res) {
+		logger.warn( "resource not found, body:", req.body);
 		// res.render('404', { title: 'Page Not Found'}); 
 		res.status(404).send( [{message:"Page Not Found"}]);
 	});
